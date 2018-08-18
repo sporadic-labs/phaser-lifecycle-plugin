@@ -1,0 +1,27 @@
+{
+  "coverage": "6.66%",
+  "expectCount": 15,
+  "actualCount": 1,
+  "files": {
+    "src/phaser-lifecycle-plugin.js": {
+      "expectCount": 15,
+      "actualCount": 1,
+      "undocumentLines": [
+        17,
+        20,
+        21,
+        23,
+        24,
+        25,
+        30,
+        39,
+        43,
+        47,
+        51,
+        57,
+        70,
+        76
+      ]
+    }
+  }
+}

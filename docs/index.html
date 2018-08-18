@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <base data-ice="baseUrl" href="./">
+  <title data-ice="title">Manual | phaser-lifecycle-plugin</title>
+  <link type="text/css" rel="stylesheet" href="css/style.css">
+  <link type="text/css" rel="stylesheet" href="css/prettify-tomorrow.css">
+  <script src="script/prettify/prettify.js"></script>
+  <script src="script/manual.js"></script>
+<link rel="stylesheet" href="./inject/css/0-injected-style.css"><meta name="description" content="A Phaser 3 plugin to make it easier to have custom objects hook into Phaser&apos;s lifecycle events - preupdate, postupdate, etc."><meta property="twitter:card" content="summary"><meta property="twitter:title" content="phaser-lifecycle-plugin"><meta property="twitter:description" content="A Phaser 3 plugin to make it easier to have custom objects hook into Phaser&apos;s lifecycle events - preupdate, postupdate, etc."></head>
+<body class="layout-container manual-root manual-index" data-ice="rootContainer">
+
+<header>
+  <a href="./">Home</a>
+  
+  <a href="identifiers.html">Reference</a>
+  <a href="source.html">Source</a>
+  
+  <div class="search-box">
+  <span>
+    <img src="./image/search.png">
+    <span class="search-input-edge"></span><input class="search-input"><span class="search-input-edge"></span>
+  </span>
+    <ul class="search-result"></ul>
+  </div>
+<a style="position:relative; top:3px;" href="https://github.com/sporadic-labs/phaser-lifecycle-plugin"><img width="20px" src="./image/github.png"></a></header>
+
+<nav class="navigation" data-ice="nav"><div class="manual-toc-root">
+  
+<div data-ice="manual">
+    <ul class="manual-toc">
+      
+    <li data-ice="manualNav" class="indent-h1" data-link="manual/README.html"><a href="manual/README.html" data-ice="link">Phaser Lifecycle Plugin</a></li>
+<li data-ice="manualNav" class="indent-h2" data-link="manual/README.html"><a href="manual/README.html#why" data-ice="link">Why</a></li>
+<li data-ice="manualNav" class="indent-h2" data-link="manual/README.html"><a href="manual/README.html#installation" data-ice="link">Installation</a></li>
+<li data-ice="manualNav" class="indent-h3" data-link="manual/README.html"><a href="manual/README.html#as-a-script" data-ice="link">As a Script</a></li>
+<li data-ice="manualNav" class="indent-h3" data-link="manual/README.html"><a href="manual/README.html#as-a-module" data-ice="link">As a Module</a></li>
+<li data-ice="manualNav" class="indent-h2" data-link="manual/README.html"><a href="manual/README.html#usage" data-ice="link">Usage</a></li>
+<li data-ice="manualNav" class="indent-h3" data-link="manual/README.html"><a href="manual/README.html#initial-setup" data-ice="link">Initial Setup</a></li>
+<li data-ice="manualNav" class="indent-h3" data-link="manual/README.html"><a href="manual/README.html#usage-in-scene" data-ice="link">Usage in Scene</a></li>
+<li data-ice="manualNav" class="indent-h2" data-link="manual/README.html"><a href="manual/README.html#development" data-ice="link">Development</a></li>
+<li data-ice="manualNav" class="indent-h2" data-link="manual/README.html"><a href="manual/README.html#tests" data-ice="link">Tests</a></li>
+<li data-ice="manualNav" class="indent-h2" data-link="manual/README.html"><a href="manual/README.html#similar-work" data-ice="link">Similar Work</a></li>
+</ul>
+  </div>
+</div>
+</nav>
+
+<div class="content" data-ice="content"><div class="github-markdown">
+  <div class="manual-user-index" data-ice="manualUserIndex"><h1 id="phaser-lifecycle-plugin">Phaser Lifecycle Plugin</h1><p>A Phaser 3 plugin to make it easier to have custom objects hook into Phaser&apos;s lifecycle events - preupdate, postupdate, etc.</p>
+<p>Note: this plugin is still in progress and will be updated to an official release with docs soon!</p>
+<p>TODO: insert small snippet example here.</p>
+<p>Check out the HTML documentation <a href="https://www.mikewesthad.com/phaser-matter-collision-plugin/docs/manual/README.html">here</a>.</p>
+<h2 id="why">Why</h2><p>The plugin that wraps around Phaser&apos;s event system (which is based on EventEmitter3). This allows us to avoid the issues around the EventEmitter3 library where the event emitter caches the listeners at the start of an event. E.g. at the beginning of an &quot;update&quot; event, the array of listeners is cached. That leads to bugs if a listener gets unsubscribed during an event, a listener is destroyed during the physics system&apos;s update. That listener may still get invoked during update. This plugin immediately unsubscribes the listener.</p>
+<h2 id="installation">Installation</h2><p>You can install this plugin globally as a script, or locally as a module using your bundler of choice.</p>
+<h3 id="as-a-script">As a Script</h3><p>You can drop in any of the transpiled code into your project as a standalone script. Choose the version that you want:</p>
+<ul>
+<li><a href="https://raw.githubusercontent.com/mikewesthad/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.min.js">minified code</a> &amp; optional <a href="https://raw.githubusercontent.com/mikewesthad/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.min.js.map">source map</a></li>
+<li><a href="https://raw.githubusercontent.com/mikewesthad/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.js">unminified code</a> &amp; optional <a href="https://raw.githubusercontent.com/mikewesthad/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.js.map">source map</a></li>
+</ul>
+<p>E.g. if you wanted the minified code, you would add this to your HTML:</p>
+<pre><code class="lang-html"><code class="source-code prettyprint">&lt;script src=&quot;phaser-lifecycle-plugin.min.js&quot;&gt;&lt;/script&gt;</code>
+</code></pre>
+<p>Or use the jsdelivr CDN:</p>
+<pre><code class="lang-html"><code class="source-code prettyprint">&lt;script src=&quot;//cdn.jsdelivr.net/npm/phaser-lifecycle-plugin&quot;&gt;&lt;/script&gt;</code>
+</code></pre>
+<p>Now you can use the global <code>PhaserLifecyclePlugin</code>. See <a href="#usage">usage</a> for how to use the plugin.</p>
+<h3 id="as-a-module">As a Module</h3><p>Install via npm:</p>
+<pre><code><code class="source-code prettyprint">npm install --save phaser-lifecycle-plugin</code>
+</code></pre><p>To use the transpiled and minified distribution of the library:</p>
+<pre><code class="lang-js"><code class="source-code prettyprint">import PhaserLifecyclePlugin from &quot;phaser-lifecycle-plugin&quot;;</code>
+</code></pre>
+<p>To use the raw library (so you can transpile it to match your own project settings):</p>
+<pre><code class="lang-js"><code class="source-code prettyprint">import PhaserLifecyclePlugin from &quot;phaser-lifecycle-plugin/src&quot;;</code>
+</code></pre>
+<p>See <a href="#usage">usage</a> for how to use the plugin.</p>
+<h2 id="usage">Usage</h2><h3 id="initial-setup">Initial Setup</h3><p>When setting up your game config, add the plugin:</p>
+<pre><code class="lang-js"><code class="source-code prettyprint">const config = {
+  // ...
+
+  // Install the scene plugin
+  plugins: {
+    scene: [
+      {
+        plugin: PhaserLifecyclePlugin, // The plugin class
+        key: &quot;lifecycle&quot;, // Where to store in Scene.Systems, e.g. scene.sys.lifecycle
+        mapping: &quot;lifecycle&quot; // Where to store in the Scene, e.g. scene.lifecycle
+      }
+    ]
+  }
+};
+
+const game = new Phaser.Game(config);</code>
+</code></pre>
+<p>Now, within a scene, you can use <code>this.lifecycle</code> to access the plugin instance.</p>
+<h3 id="usage-in-scene">Usage in Scene</h3><p>Within a scene, you can now:</p>
+<pre><code class="lang-js"><code class="source-code prettyprint">class CustomPlayer {
+  update() {
+    console.log(&quot;Update!&quot;);
+  }
+  preUpdate() {
+    console.log(&quot;Before update!&quot;);
+  }
+  postUpdate() {
+    console.log(&quot;After update!&quot;);
+  }
+}
+
+const player = new CustomPlayer();
+this.lifecycle.add(player);</code>
+</code></pre>
+<p>And the player&apos;s <code>update</code>, <code>preUpdate</code> and <code>postUpdate</code> methods will be invoked in sync with the scene events. Running <code>this.lifecycle.remove(player)</code> will stop those methods from being invoked.</p>
+<p>TODO: better example with custom mapping &amp; showing how each method hook is optional.</p>
+<h2 id="development">Development</h2><p>The project is controlled by npm scripts and uses cypress &amp; jest for testing. Cypress is used for end-to-end verification that the plugin works as expected with Phaser. Jest is used for unit testing the plugin (via heavy mocking since Phaser headless mode is not complete).</p>
+<ul>
+<li>The <code>watch</code> and <code>build</code> tasks will build the plugin source in library/ or the projects in end-to-end-tests/</li>
+<li>The <code>serve</code> task opens the whole project (starting at the root) in a server</li>
+<li>The <code>dev</code> task will build &amp; watch the library, tests and open up the server. This is useful for creating tests and updating the library.</li>
+<li>The <code>dev:cypress</code> task will build &amp; watch the library &amp; tests, as well as open up cypress in headed mode. This is useful for checking out individual tests and debugging them.</li>
+<li>The <code>test:cypress</code> task will build the tests and run cypress in headless mode to check all end-to-end tests.</li>
+<li>The <code>test:jest</code> will run the jest tests.</li>
+</ul>
+<h2 id="tests">Tests</h2><p>The cypress tests rely on a particular structure:</p>
+<ul>
+<li>Each test game inside of &quot;end-to-end-tests/&quot; should have an &quot;index.html&quot; file as the entry point. &quot;src/js/index.js&quot; will be compiled to &quot;build/js/index.js&quot; by webpack. (Cypress doesn&apos;t support <code>type=&quot;module&quot;</code> on scripts, so this is necessary if we need modules.)</li>
+<li>Each test has access to <code>test-utils.js</code> which provides <code>startTest</code>, <code>passTest</code> and <code>failTest</code> methods. Call <code>startTest</code> at the beginning and pass/fail when the test passes/fails. This manipulates in the DOM in a way that cypress is expecting.</li>
+<li>Each test in &quot;cypress/integration/&quot; simply loads up the specified URL and waits for it to pass or timeout. (Technically, startTest and failTest are ignored, but they are useful for visual inspection of a test.)</li>
+</ul>
+<p>The jest unit tests rely on a simple mocking of Phaser. They are stored inside &quot;src/&quot;. Once Phaser headless is available, this testing structure could be re-evaluated.</p>
+<h2 id="similar-work">Similar Work</h2><p>samme&apos;s nice <a href="https://github.com/samme/phaser-plugin-update">phaser-plugin-update</a> is similar, but just focused on update, whereas our use case requires more of Phaser&apos;s life cycle hooks.</p>
+</div>
+
+  
+
+  <div class="manual-cards">
+    
+  <div class="manual-card-wrap" data-ice="cards">
+      <div class="manual-card">
+        <div data-ice="card"><h1>Phaser Lifecycle Plugin</h1><p>A Phaser 3 plugin to make it easier to have custom objects hook into Phaser&apos;s lifecycle events - preupdate, postupdate, etc.</p><p>Note: this plugin is still in progress and will be updated to an official release with docs soon!</p><p>TODO: insert small snippet example here.</p><p>Check out the HTML documentation <a href="https://www.mikewesthad.com/phaser-matter-collision-plugin/docs/manual/README.html">here</a>.</p><h2>Why</h2><p>The plugin that wraps around Phaser&apos;s event system (which is based on EventEmitter3). This allows us to avoid the issues around the EventEmitter3 library where the event emitter caches the listeners at the start of an event. E.g. at the beginning of an &quot;update&quot; event, the array of listeners is cached. That leads to bugs if a listener gets unsubscribed during an event, a listener is destroyed during the physics system&apos;s update. That listener may still get invoked during update. This plugin immediately unsubscribes the listener.</p><h2>Installation</h2><p>You can install this plugin globally as a script, or locally as a module using your bundler of choice.</p><h3>As a Script</h3><p>You can drop in any of the transpiled code into your project as a standalone script. Choose the version that you want:</p><ul>
+<li><a href="https://raw.githubusercontent.com/mikewesthad/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.min.js">minified code</a> &amp; optional <a href="https://raw.githubusercontent.com/mikewesthad/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.min.js.map">source map</a></li>
+<li><a href="https://raw.githubusercontent.com/mikewesthad/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.js">unminified code</a> &amp; optional <a href="https://raw.githubusercontent.com/mikewesthad/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.js.map">source map</a></li>
+</ul><p>E.g. if you wanted the minified code, you would add this to your HTML:</p><pre><code class="lang-html"><code class="source-code prettyprint">&lt;script src=&quot;phaser-lifecycle-plugin.min.js&quot;&gt;&lt;/script&gt;</code>
+</code></pre><p>Or use the jsdelivr CDN:</p><pre><code class="lang-html"><code class="source-code prettyprint">&lt;script src=&quot;//cdn.jsdelivr.net/npm/phaser-lifecycle-plugin&quot;&gt;&lt;/script&gt;</code>
+</code></pre><p>Now you can use the global <code>PhaserLifecyclePlugin</code>. See <a href="#usage">usage</a> for how to use the plugin.</p><h3>As a Module</h3><p>Install via npm:</p><pre><code><code class="source-code prettyprint">npm install --save phaser-lifecycle-plugin</code>
+</code></pre><p>To use the transpiled and minified distribution of the library:</p><pre><code class="lang-js"><code class="source-code prettyprint">import PhaserLifecyclePlugin from &quot;phaser-lifecycle-plugin&quot;;</code>
+</code></pre><p>To use the raw library (so you can transpile it to match your own project settings):</p><pre><code class="lang-js"><code class="source-code prettyprint">import PhaserLifecyclePlugin from &quot;phaser-lifecycle-plugin/src&quot;;</code>
+</code></pre><p>See <a href="#usage">usage</a> for how to use the plugin.</p><h2>Usage</h2><h3>Initial Setup</h3><p>When setting up your game config, add the plugin:</p><pre><code class="lang-js"><code class="source-code prettyprint">const config = {
+  // ...
+
+  // Install the scene plugin
+  plugins: {
+    scene: [
+      {
+        plugin: PhaserLifecyclePlugin, // The plugin class
+        key: &quot;lifecycle&quot;, // Where to store in Scene.Systems, e.g. scene.sys.lifecycle
+        mapping: &quot;lifecycle&quot; // Where to store in the Scene, e.g. scene.lifecycle
+      }
+    ]
+  }
+};
+
+const game = new Phaser.Game(config);</code>
+</code></pre><p>Now, within a scene, you can use <code>this.lifecycle</code> to access the plugin instance.</p><h3>Usage in Scene</h3><p>Within a scene, you can now:</p><pre><code class="lang-js"><code class="source-code prettyprint">class CustomPlayer {
+  update() {
+    console.log(&quot;Update!&quot;);
+  }
+  preUpdate() {
+    console.log(&quot;Before update!&quot;);
+  }
+  postUpdate() {
+    console.log(&quot;After update!&quot;);
+  }
+}
+
+const player = new CustomPlayer();
+this.lifecycle.add(player);</code>
+</code></pre><p>And the player&apos;s <code>update</code>, <code>preUpdate</code> and <code>postUpdate</code> methods will be invoked in sync with the scene events. Running <code>this.lifecycle.remove(player)</code> will stop those methods from being invoked.</p><p>TODO: better example with custom mapping &amp; showing how each method hook is optional.</p><h2>Development</h2><p>The project is controlled by npm scripts and uses cypress &amp; jest for testing. Cypress is used for end-to-end verification that the plugin works as expected with Phaser. Jest is used for unit testing the plugin (via heavy mocking since Phaser headless mode is not complete).</p><ul>
+<li>The <code>watch</code> and <code>build</code> tasks will build the plugin source in library/ or the projects in end-to-end-tests/</li>
+<li>The <code>serve</code> task opens the whole project (starting at the root) in a server</li>
+<li>The <code>dev</code> task will build &amp; watch the library, tests and open up the server. This is useful for creating tests and updating the library.</li>
+<li>The <code>dev:cypress</code> task will build &amp; watch the library &amp; tests, as well as open up cypress in headed mode. This is useful for checking out individual tests and debugging them.</li>
+<li>The <code>test:cypress</code> task will build the tests and run cypress in headless mode to check all end-to-end tests.</li>
+<li>The <code>test:jest</code> will run the jest tests.</li>
+</ul><h2>Tests</h2><p>The cypress tests rely on a particular structure:</p><ul>
+<li>Each test game inside of &quot;end-to-end-tests/&quot; should have an &quot;index.html&quot; file as the entry point. &quot;src/js/index.js&quot; will be compiled to &quot;build/js/index.js&quot; by webpack. (Cypress doesn&apos;t support <code>type=&quot;module&quot;</code> on scripts, so this is necessary if we need modules.)</li>
+<li>Each test has access to <code>test-utils.js</code> which provides <code>startTest</code>, <code>passTest</code> and <code>failTest</code> methods. Call <code>startTest</code> at the beginning and pass/fail when the test passes/fails. This manipulates in the DOM in a way that cypress is expecting.</li>
+<li>Each test in &quot;cypress/integration/&quot; simply loads up the specified URL and waits for it to pass or timeout. (Technically, startTest and failTest are ignored, but they are useful for visual inspection of a test.)</li>
+</ul><p>The jest unit tests rely on a simple mocking of Phaser. They are stored inside &quot;src/&quot;. Once Phaser headless is available, this testing structure could be re-evaluated.</p><h2>Similar Work</h2><p>samme&apos;s nice <a href="https://github.com/samme/phaser-plugin-update">phaser-plugin-update</a> is similar, but just focused on update, whereas our use case requires more of Phaser&apos;s life cycle hooks.</p></div>
+        <a data-ice="link" href="manual/README.html"></a>
+      </div>
+    </div>
+</div>
+</div>
+</div>
+
+<footer class="footer">
+  Generated by <a href="https://esdoc.org">ESDoc<span data-ice="esdocVersion">(1.1.0)</span><img src="./image/esdoc-logo-mini-black.png"></a>
+</footer>
+
+<script src="script/search_index.js"></script>
+<script src="script/search.js"></script>
+<script src="script/pretty-print.js"></script>
+<script src="script/inherited-summary.js"></script>
+<script src="script/test-summary.js"></script>
+<script src="script/inner-link.js"></script>
+<script src="script/patch-for-local.js"></script>
+</body>
+</html>
