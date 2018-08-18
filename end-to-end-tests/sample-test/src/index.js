@@ -21,8 +21,7 @@ const config = {
       {
         key: "lifecycle",
         plugin: PhaserLifecyclePlugin,
-        mapping: "lifecycle",
-        start: true
+        mapping: "lifecycle"
       }
     ]
   }
