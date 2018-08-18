@@ -1,9 +1,9 @@
 /// <reference types="Cypress" />
 
-const testName = "pair-collision-events";
+const testName = "sample-test";
 
 context(`Run ${testName}`, () => {
   it("should run with no errors", () => {
-    cy.runPhaserTest(`/tests/${testName}`);
+    cy.runPhaserTest(`/end-to-end-tests/${testName}`);
   });
 });
