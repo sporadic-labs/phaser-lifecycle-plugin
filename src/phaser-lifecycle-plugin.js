@@ -1,3 +1,9 @@
+// TODO:
+// - add config option to add() to allow custom mapping to update/preupdate/postupdate
+// - add priority/
+// - docs
+// - more tests
+
 import Phaser from "phaser";
 
 /**
@@ -61,7 +67,6 @@ export default class LifecyclePlugin extends Phaser.Plugins.ScenePlugin {
     this.postUpdateListeners.clear();
   }
 
-  // TODO: add config option, add priority
   add(obj) {
     if (obj.update) this.updateListeners.add(obj);
     if (obj.preUpdate) this.preUpdateListeners.add(obj);
