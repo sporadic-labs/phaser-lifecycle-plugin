@@ -50,13 +50,13 @@
 <div class="content" data-ice="content"><div class="github-markdown" data-ice="content"><h1 id="phaser-lifecycle-plugin">Phaser Lifecycle Plugin</h1><p>A Phaser 3 plugin to make it easier to have custom objects hook into Phaser&apos;s lifecycle events - preupdate, postupdate, etc.</p>
 <p>Note: this plugin is still in progress and will be updated to an official release with docs soon!</p>
 <p>TODO: insert small snippet example here.</p>
-<p>Check out the HTML documentation <a href="https://www.mikewesthad.com/phaser-matter-collision-plugin/docs/manual/README.html">here</a>.</p>
+<p>Check out the HTML documentation <a href="https://sporadic-labs.github.io/phaser-lifecycle-plugin/docs/manual/README.html">here</a>.</p>
 <h2 id="why">Why</h2><p>The plugin that wraps around Phaser&apos;s event system (which is based on EventEmitter3). This allows us to avoid the issues around the EventEmitter3 library where the event emitter caches the listeners at the start of an event. E.g. at the beginning of an &quot;update&quot; event, the array of listeners is cached. That leads to bugs if a listener gets unsubscribed during an event, a listener is destroyed during the physics system&apos;s update. That listener may still get invoked during update. This plugin immediately unsubscribes the listener.</p>
 <h2 id="installation">Installation</h2><p>You can install this plugin globally as a script, or locally as a module using your bundler of choice.</p>
 <h3 id="as-a-script">As a Script</h3><p>You can drop in any of the transpiled code into your project as a standalone script. Choose the version that you want:</p>
 <ul>
-<li><a href="https://raw.githubusercontent.com/mikewesthad/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.min.js">minified code</a> &amp; optional <a href="https://raw.githubusercontent.com/mikewesthad/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.min.js.map">source map</a></li>
-<li><a href="https://raw.githubusercontent.com/mikewesthad/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.js">unminified code</a> &amp; optional <a href="https://raw.githubusercontent.com/mikewesthad/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.js.map">source map</a></li>
+<li><a href="https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.min.js">minified code</a> &amp; optional <a href="https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.min.js.map">source map</a></li>
+<li><a href="https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.js">unminified code</a> &amp; optional <a href="https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.js.map">source map</a></li>
 </ul>
 <p>E.g. if you wanted the minified code, you would add this to your HTML:</p>
 <pre><code class="lang-html"><code class="source-code prettyprint">&lt;script src=&quot;phaser-lifecycle-plugin.min.js&quot;&gt;&lt;/script&gt;</code>
