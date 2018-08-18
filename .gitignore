@@ -1,0 +1,9 @@
+docs
+types
+node_modules
+cypress/screenshots
+cypress/videos
+end-to-end-tests/*/build
+
+# Ignore files used for publishing to gh-pages
+.publish
