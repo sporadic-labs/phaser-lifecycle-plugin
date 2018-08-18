@@ -6,7 +6,7 @@ Note: this plugin is still in progress and will be updated to an official releas
 
 TODO: insert small snippet example here.
 
-Check out the HTML documentation [here](https://www.mikewesthad.com/phaser-matter-collision-plugin/docs/manual/README.html).
+Check out the HTML documentation [here](https://sporadic-labs.github.io/phaser-lifecycle-plugin/docs/manual/README.html).
 
 ## Why
 
@@ -20,8 +20,8 @@ You can install this plugin globally as a script, or locally as a module using y
 
 You can drop in any of the transpiled code into your project as a standalone script. Choose the version that you want:
 
-- [minified code](https://raw.githubusercontent.com/mikewesthad/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.min.js) & optional [source map](https://raw.githubusercontent.com/mikewesthad/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.min.js.map)
-- [unminified code](https://raw.githubusercontent.com/mikewesthad/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.js) & optional [source map](https://raw.githubusercontent.com/mikewesthad/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.js.map)
+- [minified code](https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.min.js) & optional [source map](https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.min.js.map)
+- [unminified code](https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.js) & optional [source map](https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.js.map)
 
 E.g. if you wanted the minified code, you would add this to your HTML:
 
