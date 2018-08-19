@@ -20,62 +20,82 @@ export default class LifecyclePlugin extends Phaser.Plugins.ScenePlugin {
     this.scene = scene;
     this.systems = scene.sys;
 
-    this.updateListeners = new Set();
-    this.preUpdateListeners = new Set();
-    this.postUpdateListeners = new Set();
+    // Other events we could proxy:
+    //  pause, resume, sleep, wake, resize, boot, start, transition
+    const camelCaseEvents = ["update", "preUpdate", "postUpdate", "render", "destroy"];
+    this.eventNames = camelCaseEvents.map(s => s.toLowerCase());
+    this.possibleMethodNames = new Set([...camelCaseEvents, ...this.eventNames]);
+
+    // A hashmap of listeners in the form: eventName => Map(object, method)
+    this.listeners = {};
+    this.eventNames.forEach(name => (this.listeners[name] = new Map()));
+
+    // Create bound versions of each event handler
+    this.eventHandlers = {};
+    this.eventNames.forEach(
+      name => (this.eventHandlers[name] = this.onSceneEvent.bind(this, name))
+    );
 
     if (!scene.sys.settings.isBooted) this.systems.events.once("boot", this.boot, this);
   }
 
   boot() {
     const emitter = this.systems.events;
-    emitter.on("update", this.onUpdate, this);
-    emitter.on("preupdate", this.onPreUpdate, this);
-    emitter.on("postupdate", this.onPostUpdate, this);
-    emitter.on("shutdown", this.onShutdown, this);
-    emitter.once("destroy", this.onDestroy, this);
+    emitter.on("shutdown", this.shutdown, this);
+    emitter.on("start", this.start, this);
+    emitter.once("destroy", this.destroy, this);
   }
 
-  onUpdate(...args) {
-    this.updateListeners.forEach(obj => obj.update(...args));
-  }
-
-  onPreUpdate(...args) {
-    this.preUpdateListeners.forEach(obj => obj.preUpdate(...args));
-  }
-
-  onPostUpdate(...args) {
-    this.postUpdateListeners.forEach(obj => obj.postUpdate(...args));
-  }
-
-  onShutdown() {
-    this.updateListeners.clear();
-    this.preUpdateListeners.clear();
-    this.postUpdateListeners.clear();
-  }
-
-  onDestroy() {
+  start() {
     const emitter = this.systems.events;
+    this.eventNames.forEach(name => emitter.on(name, this.eventHandlers[name]));
+  }
 
-    emitter.off("update", this.onUpdate, this);
-    emitter.off("preupdate", this.onPreUpdate, this);
-    emitter.off("postupdate", this.onPostUpdate, this);
+  onSceneEvent(eventName, ...args) {
+    this.listeners[eventName].forEach((method, object) => method.apply(object, args));
+  }
+
+  add(object, eventMapping) {
+    // No mapping given, default to checking for methods named after the event
+    if (!eventMapping) {
+      eventMapping = {};
+      this.possibleMethodNames.forEach(methodName => {
+        if (typeof object[methodName] === "function") {
+          const eventName = methodName.toLowerCase();
+          eventMapping[eventName] = object[methodName];
+        }
+      });
+    }
+
+    Object.entries(eventMapping).forEach(([eventName, method]) => {
+      const listenerMap = this.listeners[eventName];
+      if (listenerMap) listenerMap.set(object, method);
+    });
+  }
+
+  remove(object) {
+    this.eventNames.forEach(name => this.listeners[name].delete(object));
+  }
+
+  removeAll() {
+    this.eventNames.forEach(name => this.listeners[name].clear());
+  }
+
+  shutdown() {
+    this.removeAll();
+    const emitter = this.systems.events;
+    this.eventNames.forEach(eventName => {
+      emitter.off(eventName, this.eventHandlers[eventName]);
+    });
+  }
+
+  destroy() {
+    if (this.eventHandlers["destroy"]) this.eventHandlers["destroy"]();
+    const emitter = this.systems.events;
     emitter.off("shutdown", this.onShutdown, this);
-
-    this.updateListeners.clear();
-    this.preUpdateListeners.clear();
-    this.postUpdateListeners.clear();
-  }
-
-  add(obj) {
-    if (obj.update) this.updateListeners.add(obj);
-    if (obj.preUpdate) this.preUpdateListeners.add(obj);
-    if (obj.postUpdate) this.postUpdateListeners.add(obj);
-  }
-
-  remove(obj) {
-    this.updateListeners.delete(obj);
-    this.preUpdateListeners.delete(obj);
-    this.postUpdateListeners.delete(obj);
+    this.eventNames.forEach(eventName => {
+      emitter.off(eventName, this.eventHandlers[eventName]);
+    });
+    this.removeAll();
   }
 }
