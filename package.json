@@ -41,6 +41,9 @@
   "bugs": {
     "url": "https://github.com/sporadic-labs/phaser-lifecycle-plugin/issues"
   },
+  "peerDependencies": {
+    "phaser": "^3.11.0"
+  },
   "homepage": "https://github.com/sporadic-labs/phaser-lifecycle-plugin#readme",
   "devDependencies": {
     "babel-core": "^6.26.3",
