@@ -136,7 +136,7 @@ And the player's `update`, `preUpdate` and `postUpdate` methods will be invoked 
 
 If you don't pass in a second parameter to `LifeCyclePlugin#add(...)`, it will check the given object for the following methods: "update", "preUpdate", "preupdate", "postUpdate", "postupdate", "render" and "destroy". If they are found, they are automatically subscribed to the corresponding scene events.
 
-Alternatively, you can specify a mapping from event name to method name:
+Alternatively, you can specify a custom mapping from Scene event name to method name:
 
 ```js
 class CustomPlayer {
