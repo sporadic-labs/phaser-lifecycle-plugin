@@ -112,7 +112,11 @@ var external_root_Phaser_commonjs_phaser_commonjs2_phaser_amd_phaser_ = __webpac
 var external_root_Phaser_commonjs_phaser_commonjs2_phaser_amd_phaser_default = /*#__PURE__*/__webpack_require__.n(external_root_Phaser_commonjs_phaser_commonjs2_phaser_amd_phaser_);
 
 // CONCATENATED MODULE: ./phaser-lifecycle-plugin.js
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -147,9 +151,25 @@ var LifecyclePlugin = function (_Phaser$Plugins$Scene) {
     _this.scene = scene;
     _this.systems = scene.sys;
 
-    _this.updateListeners = new Set();
-    _this.preUpdateListeners = new Set();
-    _this.postUpdateListeners = new Set();
+    // Other events we could proxy:
+    //  pause, resume, sleep, wake, resize, boot, start, transition
+    var camelCaseEvents = ["update", "preUpdate", "postUpdate", "render", "destroy"];
+    _this.eventNames = camelCaseEvents.map(function (s) {
+      return s.toLowerCase();
+    });
+    _this.possibleMethodNames = new Set([].concat(camelCaseEvents, _toConsumableArray(_this.eventNames)));
+
+    // A hashmap of listeners in the form: eventName => Map(object, method)
+    _this.listeners = {};
+    _this.eventNames.forEach(function (name) {
+      return _this.listeners[name] = new Map();
+    });
+
+    // Create bound versions of each event handler
+    _this.eventHandlers = {};
+    _this.eventNames.forEach(function (name) {
+      return _this.eventHandlers[name] = _this.onSceneEvent.bind(_this, name);
+    });
 
     if (!scene.sys.settings.isBooted) _this.systems.events.once("boot", _this.boot, _this);
     return _this;
@@ -159,79 +179,97 @@ var LifecyclePlugin = function (_Phaser$Plugins$Scene) {
     key: "boot",
     value: function boot() {
       var emitter = this.systems.events;
-      emitter.on("update", this.onUpdate, this);
-      emitter.on("preupdate", this.onPreUpdate, this);
-      emitter.on("postupdate", this.onPostUpdate, this);
-      emitter.on("shutdown", this.onShutdown, this);
-      emitter.once("destroy", this.onDestroy, this);
+      emitter.on("shutdown", this.shutdown, this);
+      emitter.on("start", this.start, this);
+      emitter.once("destroy", this.destroy, this);
     }
   }, {
-    key: "onUpdate",
-    value: function onUpdate() {
-      for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-        args[_key] = arguments[_key];
-      }
+    key: "start",
+    value: function start() {
+      var _this2 = this;
 
-      this.updateListeners.forEach(function (obj) {
-        return obj.update.apply(obj, args);
-      });
-    }
-  }, {
-    key: "onPreUpdate",
-    value: function onPreUpdate() {
-      for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-        args[_key2] = arguments[_key2];
-      }
-
-      this.preUpdateListeners.forEach(function (obj) {
-        return obj.preUpdate.apply(obj, args);
-      });
-    }
-  }, {
-    key: "onPostUpdate",
-    value: function onPostUpdate() {
-      for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-        args[_key3] = arguments[_key3];
-      }
-
-      this.postUpdateListeners.forEach(function (obj) {
-        return obj.postUpdate.apply(obj, args);
-      });
-    }
-  }, {
-    key: "onShutdown",
-    value: function onShutdown() {
-      this.updateListeners.clear();
-      this.preUpdateListeners.clear();
-      this.postUpdateListeners.clear();
-    }
-  }, {
-    key: "onDestroy",
-    value: function onDestroy() {
       var emitter = this.systems.events;
+      this.eventNames.forEach(function (name) {
+        return emitter.on(name, _this2.eventHandlers[name]);
+      });
+    }
+  }, {
+    key: "onSceneEvent",
+    value: function onSceneEvent(eventName) {
+      for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+        args[_key - 1] = arguments[_key];
+      }
 
-      emitter.off("update", this.onUpdate, this);
-      emitter.off("preupdate", this.onPreUpdate, this);
-      emitter.off("postupdate", this.onPostUpdate, this);
-      emitter.off("shutdown", this.onShutdown, this);
-
-      this.updateListeners.clear();
-      this.preUpdateListeners.clear();
-      this.postUpdateListeners.clear();
+      this.listeners[eventName].forEach(function (method, object) {
+        return method.apply(object, args);
+      });
     }
   }, {
     key: "add",
-    value: function add(obj) {
-      if (obj.update) this.updateListeners.add(obj);
-      if (obj.preUpdate) this.preUpdateListeners.add(obj);
-      if (obj.postUpdate) this.postUpdateListeners.add(obj);
+    value: function add(object, eventMapping) {
+      var _this3 = this;
+
+      // No mapping given, default to checking for methods named after the event
+      if (!eventMapping) {
+        eventMapping = {};
+        this.possibleMethodNames.forEach(function (methodName) {
+          if (typeof object[methodName] === "function") {
+            var eventName = methodName.toLowerCase();
+            eventMapping[eventName] = object[methodName];
+          }
+        });
+      }
+
+      Object.entries(eventMapping).forEach(function (_ref) {
+        var _ref2 = _slicedToArray(_ref, 2),
+            eventName = _ref2[0],
+            method = _ref2[1];
+
+        var listenerMap = _this3.listeners[eventName];
+        if (listenerMap) listenerMap.set(object, method);
+      });
     }
   }, {
     key: "remove",
-    value: function remove(obj) {
-      this.updateListeners.delete(obj);
-      this.preUpdateListeners.delete(obj);
-      this.postUpdateListeners.delete(obj);
+    value: function remove(object) {
+      var _this4 = this;
+
+      this.eventNames.forEach(function (name) {
+        return _this4.listeners[name].delete(object);
+      });
+    }
+  }, {
+    key: "removeAll",
+    value: function removeAll() {
+      var _this5 = this;
+
+      this.eventNames.forEach(function (name) {
+        return _this5.listeners[name].clear();
+      });
+    }
+  }, {
+    key: "shutdown",
+    value: function shutdown() {
+      var _this6 = this;
+
+      this.removeAll();
+      var emitter = this.systems.events;
+      this.eventNames.forEach(function (eventName) {
+        emitter.off(eventName, _this6.eventHandlers[eventName]);
+      });
+    }
+  }, {
+    key: "destroy",
+    value: function destroy() {
+      var _this7 = this;
+
+      if (this.eventHandlers["destroy"]) this.eventHandlers["destroy"]();
+      var emitter = this.systems.events;
+      emitter.off("shutdown", this.onShutdown, this);
+      this.eventNames.forEach(function (eventName) {
+        emitter.off(eventName, _this7.eventHandlers[eventName]);
+      });
+      this.removeAll();
     }
   }]);
 
