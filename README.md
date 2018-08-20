@@ -2,15 +2,40 @@
 
 A Phaser 3 plugin to make it easier to have custom objects hook into Phaser's lifecycle events - preupdate, postupdate, etc.
 
-Note: this plugin is still in progress and will be updated to an official release with docs soon!
+Note: this plugin is still in progress. It's something we've been using internally and will update to an official release with docs soon!
 
-TODO: insert small snippet example here.
+```js
+class CustomPlayer {
+  update() {
+    console.log("Update!");
+  }
+  preUpdate() {
+    console.log("Before update!");
+  }
+  postUpdate() {
+    console.log("After update!");
+  }
+}
+
+const player = new CustomPlayer();
+
+// Hook the player's update, preUpdate and postUpdate up to Scene events
+this.lifecycle.add(player);
+
+// ...
+
+// Some time later, you can unsubscribe:
+this.lifecycle.remove(player);
+```
 
 Check out the HTML documentation [here](https://sporadic-labs.github.io/phaser-lifecycle-plugin/docs/manual/README.html).
 
 ## Why
 
-The plugin that wraps around Phaser's event system (which is based on EventEmitter3). This allows us to avoid the issues around the EventEmitter3 library where the event emitter caches the listeners at the start of an event. E.g. at the beginning of an "update" event, the array of listeners is cached. That leads to bugs if a listener gets unsubscribed during an event, a listener is destroyed during the physics system's update. That listener may still get invoked during update. This plugin immediately unsubscribes the listener.
+Two main reasons:
+
+- This reduces boilerplate for creating custom game objects and components that _don't_ subclass Phaser's game objects. TODO: demo the component pattern.
+- The plugin wraps around the event system (which is based on EventEmitter3) and proxies the events, fixing a common problem that can arise with EventEmitter3. Emitters cache their listeners at the start of an event, which can lead to unsubscribed listeners still being invoked one more time post-unsubscribing. With this plugin, any objects that are removed are removed immediately - no extra events.
 
 ## Installation
 
@@ -109,6 +134,28 @@ this.lifecycle.add(player);
 
 And the player's `update`, `preUpdate` and `postUpdate` methods will be invoked in sync with the scene events. Running `this.lifecycle.remove(player)` will stop those methods from being invoked.
 
+If you don't pass in a second parameter to `LifeCyclePlugin#add(...)`, it will check the given object for the following methods: "update", "preUpdate", "preupdate", "postUpdate", "postupdate", "render" and "destroy". If they are found, they are automatically subscribed to the corresponding scene events.
+
+Alternatively, you can specify a mapping from event name to method name:
+
+```js
+class CustomPlayer {
+  draw() {
+    console.log("Alias for render");
+  }
+  kill() {
+    console.log("Alias for destroy!");
+  }
+}
+
+const player = new CustomPlayer();
+
+this.lifecycle.add(player, {
+  render: object.draw,
+  destroy: object.kill
+});
+```
+
 TODO: better example with custom mapping & showing how each method hook is optional.
 
 ## Development
@@ -134,4 +181,4 @@ The jest unit tests rely on a simple mocking of Phaser. They are stored inside "
 
 ## Similar Work
 
-samme's nice [phaser-plugin-update](https://github.com/samme/phaser-plugin-update) is similar, but just focused on update, whereas our use case requires more of Phaser's life cycle hooks.
+samme's nice [phaser-plugin-update](https://github.com/samme/phaser-plugin-update) is similar, but just focused on update, whereas our use case required more of Phaser's life cycle hooks.
