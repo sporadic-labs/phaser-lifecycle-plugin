@@ -589,7 +589,7 @@
     "__docId__": 50,
     "kind": "file",
     "name": "src/phaser-lifecycle-plugin.js",
-    "content": "// TODO:\r\n// - add config option to add() to allow custom mapping to update/preupdate/postupdate\r\n// - add priority/\r\n// - docs\r\n// - more tests\r\n\r\nimport Phaser from \"phaser\";\r\n\r\n/**\r\n * Plugin that wraps around Phaser's event system. This allows us to avoid the issues around the\r\n * EventEmitter library Phaser uses where the EE caches the listeners at the start of an event. This\r\n * leads to bugs if a listener gets unsubscribed during an event (e.g. the physics system\r\n * unsubscribing a listener via a CB before the listener's update method). This plugin immediately\r\n * unsubscribes the listener.\r\n */\r\nexport default class LifecyclePlugin extends Phaser.Plugins.ScenePlugin {\r\n  constructor(scene, pluginManager) {\r\n    super(scene, pluginManager);\r\n\r\n    this.scene = scene;\r\n    this.systems = scene.sys;\r\n\r\n    this.updateListeners = new Set();\r\n    this.preUpdateListeners = new Set();\r\n    this.postUpdateListeners = new Set();\r\n\r\n    if (!scene.sys.settings.isBooted) this.systems.events.once(\"boot\", this.boot, this);\r\n  }\r\n\r\n  boot() {\r\n    const emitter = this.systems.events;\r\n    emitter.on(\"update\", this.onUpdate, this);\r\n    emitter.on(\"preupdate\", this.onPreUpdate, this);\r\n    emitter.on(\"postupdate\", this.onPostUpdate, this);\r\n    emitter.on(\"shutdown\", this.onShutdown, this);\r\n    emitter.once(\"destroy\", this.onDestroy, this);\r\n  }\r\n\r\n  onUpdate(...args) {\r\n    this.updateListeners.forEach(obj => obj.update(...args));\r\n  }\r\n\r\n  onPreUpdate(...args) {\r\n    this.preUpdateListeners.forEach(obj => obj.preUpdate(...args));\r\n  }\r\n\r\n  onPostUpdate(...args) {\r\n    this.postUpdateListeners.forEach(obj => obj.postUpdate(...args));\r\n  }\r\n\r\n  onShutdown() {\r\n    this.updateListeners.clear();\r\n    this.preUpdateListeners.clear();\r\n    this.postUpdateListeners.clear();\r\n  }\r\n\r\n  onDestroy() {\r\n    const emitter = this.systems.events;\r\n\r\n    emitter.off(\"update\", this.onUpdate, this);\r\n    emitter.off(\"preupdate\", this.onPreUpdate, this);\r\n    emitter.off(\"postupdate\", this.onPostUpdate, this);\r\n    emitter.off(\"shutdown\", this.onShutdown, this);\r\n\r\n    this.updateListeners.clear();\r\n    this.preUpdateListeners.clear();\r\n    this.postUpdateListeners.clear();\r\n  }\r\n\r\n  add(obj) {\r\n    if (obj.update) this.updateListeners.add(obj);\r\n    if (obj.preUpdate) this.preUpdateListeners.add(obj);\r\n    if (obj.postUpdate) this.postUpdateListeners.add(obj);\r\n  }\r\n\r\n  remove(obj) {\r\n    this.updateListeners.delete(obj);\r\n    this.preUpdateListeners.delete(obj);\r\n    this.postUpdateListeners.delete(obj);\r\n  }\r\n}\r\n",
+    "content": "// TODO:\r\n// - add config option to add() to allow custom mapping to update/preupdate/postupdate\r\n// - add priority/\r\n// - docs\r\n// - more tests\r\n\r\nimport Phaser from \"phaser\";\r\n\r\n/**\r\n * Plugin that wraps around Phaser's event system. This allows us to avoid the issues around the\r\n * EventEmitter library Phaser uses where the EE caches the listeners at the start of an event. This\r\n * leads to bugs if a listener gets unsubscribed during an event (e.g. the physics system\r\n * unsubscribing a listener via a CB before the listener's update method). This plugin immediately\r\n * unsubscribes the listener.\r\n */\r\nexport default class LifecyclePlugin extends Phaser.Plugins.ScenePlugin {\r\n  constructor(scene, pluginManager) {\r\n    super(scene, pluginManager);\r\n\r\n    this.scene = scene;\r\n    this.systems = scene.sys;\r\n\r\n    // Other events we could proxy:\r\n    //  pause, resume, sleep, wake, resize, boot, start, transition\r\n    const camelCaseEvents = [\"update\", \"preUpdate\", \"postUpdate\", \"render\", \"destroy\"];\r\n    this.eventNames = camelCaseEvents.map(s => s.toLowerCase());\r\n    this.possibleMethodNames = new Set([...camelCaseEvents, ...this.eventNames]);\r\n\r\n    // A hashmap of listeners in the form: eventName => Map(object, method)\r\n    this.listeners = {};\r\n    this.eventNames.forEach(name => (this.listeners[name] = new Map()));\r\n\r\n    // Create bound versions of each event handler\r\n    this.eventHandlers = {};\r\n    this.eventNames.forEach(\r\n      name => (this.eventHandlers[name] = this.onSceneEvent.bind(this, name))\r\n    );\r\n\r\n    if (!scene.sys.settings.isBooted) this.systems.events.once(\"boot\", this.boot, this);\r\n  }\r\n\r\n  boot() {\r\n    const emitter = this.systems.events;\r\n    emitter.on(\"shutdown\", this.shutdown, this);\r\n    emitter.on(\"start\", this.start, this);\r\n    emitter.once(\"destroy\", this.destroy, this);\r\n  }\r\n\r\n  start() {\r\n    const emitter = this.systems.events;\r\n    this.eventNames.forEach(name => emitter.on(name, this.eventHandlers[name]));\r\n  }\r\n\r\n  onSceneEvent(eventName, ...args) {\r\n    this.listeners[eventName].forEach((method, object) => method.apply(object, args));\r\n  }\r\n\r\n  add(object, eventMapping) {\r\n    // No mapping given, default to checking for methods named after the event\r\n    if (!eventMapping) {\r\n      eventMapping = {};\r\n      this.possibleMethodNames.forEach(methodName => {\r\n        if (typeof object[methodName] === \"function\") {\r\n          const eventName = methodName.toLowerCase();\r\n          eventMapping[eventName] = object[methodName];\r\n        }\r\n      });\r\n    }\r\n\r\n    Object.entries(eventMapping).forEach(([eventName, method]) => {\r\n      const listenerMap = this.listeners[eventName];\r\n      if (listenerMap) listenerMap.set(object, method);\r\n    });\r\n  }\r\n\r\n  remove(object) {\r\n    this.eventNames.forEach(name => this.listeners[name].delete(object));\r\n  }\r\n\r\n  removeAll() {\r\n    this.eventNames.forEach(name => this.listeners[name].clear());\r\n  }\r\n\r\n  shutdown() {\r\n    this.removeAll();\r\n    const emitter = this.systems.events;\r\n    this.eventNames.forEach(eventName => {\r\n      emitter.off(eventName, this.eventHandlers[eventName]);\r\n    });\r\n  }\r\n\r\n  destroy() {\r\n    if (this.eventHandlers[\"destroy\"]) this.eventHandlers[\"destroy\"]();\r\n    const emitter = this.systems.events;\r\n    emitter.off(\"shutdown\", this.onShutdown, this);\r\n    this.eventNames.forEach(eventName => {\r\n      emitter.off(eventName, this.eventHandlers[eventName]);\r\n    });\r\n    this.removeAll();\r\n  }\r\n}\r\n",
     "static": true,
     "longname": "C:/Users/mikewesthad/Documents/GitHub/phaser-lifecycle-plugin/src/phaser-lifecycle-plugin.js",
     "access": "public",
@@ -665,13 +665,13 @@
   {
     "__docId__": 55,
     "kind": "member",
-    "name": "updateListeners",
+    "name": "eventNames",
     "memberof": "src/phaser-lifecycle-plugin.js~LifecyclePlugin",
     "static": false,
-    "longname": "src/phaser-lifecycle-plugin.js~LifecyclePlugin#updateListeners",
+    "longname": "src/phaser-lifecycle-plugin.js~LifecyclePlugin#eventNames",
     "access": "public",
     "description": null,
-    "lineNumber": 23,
+    "lineNumber": 26,
     "undocument": true,
     "type": {
       "types": [
@@ -682,13 +682,13 @@
   {
     "__docId__": 56,
     "kind": "member",
-    "name": "preUpdateListeners",
+    "name": "possibleMethodNames",
     "memberof": "src/phaser-lifecycle-plugin.js~LifecyclePlugin",
     "static": false,
-    "longname": "src/phaser-lifecycle-plugin.js~LifecyclePlugin#preUpdateListeners",
+    "longname": "src/phaser-lifecycle-plugin.js~LifecyclePlugin#possibleMethodNames",
     "access": "public",
     "description": null,
-    "lineNumber": 24,
+    "lineNumber": 27,
     "undocument": true,
     "type": {
       "types": [
@@ -699,22 +699,39 @@
   {
     "__docId__": 57,
     "kind": "member",
-    "name": "postUpdateListeners",
+    "name": "listeners",
     "memberof": "src/phaser-lifecycle-plugin.js~LifecyclePlugin",
     "static": false,
-    "longname": "src/phaser-lifecycle-plugin.js~LifecyclePlugin#postUpdateListeners",
+    "longname": "src/phaser-lifecycle-plugin.js~LifecyclePlugin#listeners",
     "access": "public",
     "description": null,
-    "lineNumber": 25,
+    "lineNumber": 30,
     "undocument": true,
     "type": {
       "types": [
-        "*"
+        "{}"
       ]
     }
   },
   {
     "__docId__": 58,
+    "kind": "member",
+    "name": "eventHandlers",
+    "memberof": "src/phaser-lifecycle-plugin.js~LifecyclePlugin",
+    "static": false,
+    "longname": "src/phaser-lifecycle-plugin.js~LifecyclePlugin#eventHandlers",
+    "access": "public",
+    "description": null,
+    "lineNumber": 34,
+    "undocument": true,
+    "type": {
+      "types": [
+        "{}"
+      ]
+    }
+  },
+  {
+    "__docId__": 59,
     "kind": "method",
     "name": "boot",
     "memberof": "src/phaser-lifecycle-plugin.js~LifecyclePlugin",
@@ -724,73 +741,47 @@
     "longname": "src/phaser-lifecycle-plugin.js~LifecyclePlugin#boot",
     "access": "public",
     "description": null,
-    "lineNumber": 30,
+    "lineNumber": 42,
     "undocument": true,
     "params": [],
     "return": null
   },
   {
-    "__docId__": 59,
-    "kind": "method",
-    "name": "onUpdate",
-    "memberof": "src/phaser-lifecycle-plugin.js~LifecyclePlugin",
-    "generator": false,
-    "async": false,
-    "static": false,
-    "longname": "src/phaser-lifecycle-plugin.js~LifecyclePlugin#onUpdate",
-    "access": "public",
-    "description": null,
-    "lineNumber": 39,
-    "undocument": true,
-    "params": [
-      {
-        "name": "args",
-        "types": [
-          "...*"
-        ],
-        "spread": true
-      }
-    ],
-    "return": null
-  },
-  {
     "__docId__": 60,
     "kind": "method",
-    "name": "onPreUpdate",
+    "name": "start",
     "memberof": "src/phaser-lifecycle-plugin.js~LifecyclePlugin",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/phaser-lifecycle-plugin.js~LifecyclePlugin#onPreUpdate",
+    "longname": "src/phaser-lifecycle-plugin.js~LifecyclePlugin#start",
     "access": "public",
     "description": null,
-    "lineNumber": 43,
+    "lineNumber": 49,
     "undocument": true,
-    "params": [
-      {
-        "name": "args",
-        "types": [
-          "...*"
-        ],
-        "spread": true
-      }
-    ],
+    "params": [],
     "return": null
   },
   {
     "__docId__": 61,
     "kind": "method",
-    "name": "onPostUpdate",
+    "name": "onSceneEvent",
     "memberof": "src/phaser-lifecycle-plugin.js~LifecyclePlugin",
     "generator": false,
     "async": false,
     "static": false,
-    "longname": "src/phaser-lifecycle-plugin.js~LifecyclePlugin#onPostUpdate",
+    "longname": "src/phaser-lifecycle-plugin.js~LifecyclePlugin#onSceneEvent",
     "access": "public",
     "description": null,
-    "lineNumber": 47,
+    "lineNumber": 54,
     "undocument": true,
     "params": [
+      {
+        "name": "eventName",
+        "types": [
+          "*"
+        ]
+      },
       {
         "name": "args",
         "types": [
@@ -804,38 +795,6 @@
   {
     "__docId__": 62,
     "kind": "method",
-    "name": "onShutdown",
-    "memberof": "src/phaser-lifecycle-plugin.js~LifecyclePlugin",
-    "generator": false,
-    "async": false,
-    "static": false,
-    "longname": "src/phaser-lifecycle-plugin.js~LifecyclePlugin#onShutdown",
-    "access": "public",
-    "description": null,
-    "lineNumber": 51,
-    "undocument": true,
-    "params": [],
-    "return": null
-  },
-  {
-    "__docId__": 63,
-    "kind": "method",
-    "name": "onDestroy",
-    "memberof": "src/phaser-lifecycle-plugin.js~LifecyclePlugin",
-    "generator": false,
-    "async": false,
-    "static": false,
-    "longname": "src/phaser-lifecycle-plugin.js~LifecyclePlugin#onDestroy",
-    "access": "public",
-    "description": null,
-    "lineNumber": 57,
-    "undocument": true,
-    "params": [],
-    "return": null
-  },
-  {
-    "__docId__": 64,
-    "kind": "method",
     "name": "add",
     "memberof": "src/phaser-lifecycle-plugin.js~LifecyclePlugin",
     "generator": false,
@@ -844,11 +803,17 @@
     "longname": "src/phaser-lifecycle-plugin.js~LifecyclePlugin#add",
     "access": "public",
     "description": null,
-    "lineNumber": 70,
+    "lineNumber": 58,
     "undocument": true,
     "params": [
       {
-        "name": "obj",
+        "name": "object",
+        "types": [
+          "*"
+        ]
+      },
+      {
+        "name": "eventMapping",
         "types": [
           "*"
         ]
@@ -857,7 +822,7 @@
     "return": null
   },
   {
-    "__docId__": 65,
+    "__docId__": 63,
     "kind": "method",
     "name": "remove",
     "memberof": "src/phaser-lifecycle-plugin.js~LifecyclePlugin",
@@ -871,7 +836,7 @@
     "undocument": true,
     "params": [
       {
-        "name": "obj",
+        "name": "object",
         "types": [
           "*"
         ]
@@ -880,8 +845,56 @@
     "return": null
   },
   {
+    "__docId__": 64,
+    "kind": "method",
+    "name": "removeAll",
+    "memberof": "src/phaser-lifecycle-plugin.js~LifecyclePlugin",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "src/phaser-lifecycle-plugin.js~LifecyclePlugin#removeAll",
+    "access": "public",
+    "description": null,
+    "lineNumber": 80,
+    "undocument": true,
+    "params": [],
+    "return": null
+  },
+  {
+    "__docId__": 65,
+    "kind": "method",
+    "name": "shutdown",
+    "memberof": "src/phaser-lifecycle-plugin.js~LifecyclePlugin",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "src/phaser-lifecycle-plugin.js~LifecyclePlugin#shutdown",
+    "access": "public",
+    "description": null,
+    "lineNumber": 84,
+    "undocument": true,
+    "params": [],
+    "return": null
+  },
+  {
+    "__docId__": 66,
+    "kind": "method",
+    "name": "destroy",
+    "memberof": "src/phaser-lifecycle-plugin.js~LifecyclePlugin",
+    "generator": false,
+    "async": false,
+    "static": false,
+    "longname": "src/phaser-lifecycle-plugin.js~LifecyclePlugin#destroy",
+    "access": "public",
+    "description": null,
+    "lineNumber": 92,
+    "undocument": true,
+    "params": [],
+    "return": null
+  },
+  {
     "kind": "index",
-    "content": "# Phaser Lifecycle Plugin\r\n\r\nA Phaser 3 plugin to make it easier to have custom objects hook into Phaser's lifecycle events - preupdate, postupdate, etc.\r\n\r\nNote: this plugin is still in progress and will be updated to an official release with docs soon!\r\n\r\nTODO: insert small snippet example here.\r\n\r\nCheck out the HTML documentation [here](https://sporadic-labs.github.io/phaser-lifecycle-plugin/docs/manual/README.html).\r\n\r\n## Why\r\n\r\nThe plugin that wraps around Phaser's event system (which is based on EventEmitter3). This allows us to avoid the issues around the EventEmitter3 library where the event emitter caches the listeners at the start of an event. E.g. at the beginning of an \"update\" event, the array of listeners is cached. That leads to bugs if a listener gets unsubscribed during an event, a listener is destroyed during the physics system's update. That listener may still get invoked during update. This plugin immediately unsubscribes the listener.\r\n\r\n## Installation\r\n\r\nYou can install this plugin globally as a script, or locally as a module using your bundler of choice.\r\n\r\n### As a Script\r\n\r\nYou can drop in any of the transpiled code into your project as a standalone script. Choose the version that you want:\r\n\r\n- [minified code](https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.min.js) & optional [source map](https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.min.js.map)\r\n- [unminified code](https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.js) & optional [source map](https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.js.map)\r\n\r\nE.g. if you wanted the minified code, you would add this to your HTML:\r\n\r\n```html\r\n<script src=\"phaser-lifecycle-plugin.min.js\"></script>\r\n```\r\n\r\nOr use the jsdelivr CDN:\r\n\r\n```html\r\n<script src=\"//cdn.jsdelivr.net/npm/phaser-lifecycle-plugin\"></script>\r\n```\r\n\r\nNow you can use the global `PhaserLifecyclePlugin`. See [usage](#usage) for how to use the plugin.\r\n\r\n### As a Module\r\n\r\nInstall via npm:\r\n\r\n```\r\nnpm install --save phaser-lifecycle-plugin\r\n```\r\n\r\nTo use the transpiled and minified distribution of the library:\r\n\r\n```js\r\nimport PhaserLifecyclePlugin from \"phaser-lifecycle-plugin\";\r\n```\r\n\r\nTo use the raw library (so you can transpile it to match your own project settings):\r\n\r\n```js\r\nimport PhaserLifecyclePlugin from \"phaser-lifecycle-plugin/src\";\r\n```\r\n\r\nSee [usage](#usage) for how to use the plugin.\r\n\r\n## Usage\r\n\r\n### Initial Setup\r\n\r\nWhen setting up your game config, add the plugin:\r\n\r\n```js\r\nconst config = {\r\n  // ...\r\n\r\n  // Install the scene plugin\r\n  plugins: {\r\n    scene: [\r\n      {\r\n        plugin: PhaserLifecyclePlugin, // The plugin class\r\n        key: \"lifecycle\", // Where to store in Scene.Systems, e.g. scene.sys.lifecycle\r\n        mapping: \"lifecycle\" // Where to store in the Scene, e.g. scene.lifecycle\r\n      }\r\n    ]\r\n  }\r\n};\r\n\r\nconst game = new Phaser.Game(config);\r\n```\r\n\r\nNow, within a scene, you can use `this.lifecycle` to access the plugin instance.\r\n\r\n### Usage in Scene\r\n\r\nWithin a scene, you can now:\r\n\r\n```js\r\nclass CustomPlayer {\r\n  update() {\r\n    console.log(\"Update!\");\r\n  }\r\n  preUpdate() {\r\n    console.log(\"Before update!\");\r\n  }\r\n  postUpdate() {\r\n    console.log(\"After update!\");\r\n  }\r\n}\r\n\r\nconst player = new CustomPlayer();\r\nthis.lifecycle.add(player);\r\n```\r\n\r\nAnd the player's `update`, `preUpdate` and `postUpdate` methods will be invoked in sync with the scene events. Running `this.lifecycle.remove(player)` will stop those methods from being invoked.\r\n\r\nTODO: better example with custom mapping & showing how each method hook is optional.\r\n\r\n## Development\r\n\r\nThe project is controlled by npm scripts and uses cypress & jest for testing. Cypress is used for end-to-end verification that the plugin works as expected with Phaser. Jest is used for unit testing the plugin (via heavy mocking since Phaser headless mode is not complete).\r\n\r\n- The `watch` and `build` tasks will build the plugin source in library/ or the projects in end-to-end-tests/\r\n- The `serve` task opens the whole project (starting at the root) in a server\r\n- The `dev` task will build & watch the library, tests and open up the server. This is useful for creating tests and updating the library.\r\n- The `dev:cypress` task will build & watch the library & tests, as well as open up cypress in headed mode. This is useful for checking out individual tests and debugging them.\r\n- The `test:cypress` task will build the tests and run cypress in headless mode to check all end-to-end tests.\r\n- The `test:jest` will run the jest tests.\r\n\r\n## Tests\r\n\r\nThe cypress tests rely on a particular structure:\r\n\r\n- Each test game inside of \"end-to-end-tests/\" should have an \"index.html\" file as the entry point. \"src/js/index.js\" will be compiled to \"build/js/index.js\" by webpack. (Cypress doesn't support `type=\"module\"` on scripts, so this is necessary if we need modules.)\r\n- Each test has access to `test-utils.js` which provides `startTest`, `passTest` and `failTest` methods. Call `startTest` at the beginning and pass/fail when the test passes/fails. This manipulates in the DOM in a way that cypress is expecting.\r\n- Each test in \"cypress/integration/\" simply loads up the specified URL and waits for it to pass or timeout. (Technically, startTest and failTest are ignored, but they are useful for visual inspection of a test.)\r\n\r\nThe jest unit tests rely on a simple mocking of Phaser. They are stored inside \"src/\". Once Phaser headless is available, this testing structure could be re-evaluated.\r\n\r\n## Similar Work\r\n\r\nsamme's nice [phaser-plugin-update](https://github.com/samme/phaser-plugin-update) is similar, but just focused on update, whereas our use case requires more of Phaser's life cycle hooks.\r\n",
+    "content": "# Phaser Lifecycle Plugin\r\n\r\nA Phaser 3 plugin to make it easier to have custom objects hook into Phaser's lifecycle events - preupdate, postupdate, etc.\r\n\r\nNote: this plugin is still in progress. It's something we've been using internally and will update to an official release with docs soon!\r\n\r\n```js\r\nclass CustomPlayer {\r\n  update() {\r\n    console.log(\"Update!\");\r\n  }\r\n  preUpdate() {\r\n    console.log(\"Before update!\");\r\n  }\r\n  postUpdate() {\r\n    console.log(\"After update!\");\r\n  }\r\n}\r\n\r\nconst player = new CustomPlayer();\r\n\r\n// Hook the player's update, preUpdate and postUpdate up to Scene events\r\nthis.lifecycle.add(player);\r\n\r\n// ...\r\n\r\n// Some time later, you can unsubscribe:\r\nthis.lifecycle.remove(player);\r\n```\r\n\r\nCheck out the HTML documentation [here](https://sporadic-labs.github.io/phaser-lifecycle-plugin/docs/manual/README.html).\r\n\r\n## Why\r\n\r\nTwo main reasons:\r\n\r\n- This reduces boilerplate for creating custom game objects and components that _don't_ subclass Phaser's game objects. TODO: demo the component pattern.\r\n- The plugin wraps around the event system (which is based on EventEmitter3) and proxies the events, fixing a common problem that can arise with EventEmitter3. Emitters cache their listeners at the start of an event, which can lead to unsubscribed listeners still being invoked one more time post-unsubscribing. With this plugin, any objects that are removed are removed immediately - no extra events.\r\n\r\n## Installation\r\n\r\nYou can install this plugin globally as a script, or locally as a module using your bundler of choice.\r\n\r\n### As a Script\r\n\r\nYou can drop in any of the transpiled code into your project as a standalone script. Choose the version that you want:\r\n\r\n- [minified code](https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.min.js) & optional [source map](https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.min.js.map)\r\n- [unminified code](https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.js) & optional [source map](https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.js.map)\r\n\r\nE.g. if you wanted the minified code, you would add this to your HTML:\r\n\r\n```html\r\n<script src=\"phaser-lifecycle-plugin.min.js\"></script>\r\n```\r\n\r\nOr use the jsdelivr CDN:\r\n\r\n```html\r\n<script src=\"//cdn.jsdelivr.net/npm/phaser-lifecycle-plugin\"></script>\r\n```\r\n\r\nNow you can use the global `PhaserLifecyclePlugin`. See [usage](#usage) for how to use the plugin.\r\n\r\n### As a Module\r\n\r\nInstall via npm:\r\n\r\n```\r\nnpm install --save phaser-lifecycle-plugin\r\n```\r\n\r\nTo use the transpiled and minified distribution of the library:\r\n\r\n```js\r\nimport PhaserLifecyclePlugin from \"phaser-lifecycle-plugin\";\r\n```\r\n\r\nTo use the raw library (so you can transpile it to match your own project settings):\r\n\r\n```js\r\nimport PhaserLifecyclePlugin from \"phaser-lifecycle-plugin/src\";\r\n```\r\n\r\nSee [usage](#usage) for how to use the plugin.\r\n\r\n## Usage\r\n\r\n### Initial Setup\r\n\r\nWhen setting up your game config, add the plugin:\r\n\r\n```js\r\nconst config = {\r\n  // ...\r\n\r\n  // Install the scene plugin\r\n  plugins: {\r\n    scene: [\r\n      {\r\n        plugin: PhaserLifecyclePlugin, // The plugin class\r\n        key: \"lifecycle\", // Where to store in Scene.Systems, e.g. scene.sys.lifecycle\r\n        mapping: \"lifecycle\" // Where to store in the Scene, e.g. scene.lifecycle\r\n      }\r\n    ]\r\n  }\r\n};\r\n\r\nconst game = new Phaser.Game(config);\r\n```\r\n\r\nNow, within a scene, you can use `this.lifecycle` to access the plugin instance.\r\n\r\n### Usage in Scene\r\n\r\nWithin a scene, you can now:\r\n\r\n```js\r\nclass CustomPlayer {\r\n  update() {\r\n    console.log(\"Update!\");\r\n  }\r\n  preUpdate() {\r\n    console.log(\"Before update!\");\r\n  }\r\n  postUpdate() {\r\n    console.log(\"After update!\");\r\n  }\r\n}\r\n\r\nconst player = new CustomPlayer();\r\nthis.lifecycle.add(player);\r\n```\r\n\r\nAnd the player's `update`, `preUpdate` and `postUpdate` methods will be invoked in sync with the scene events. Running `this.lifecycle.remove(player)` will stop those methods from being invoked.\r\n\r\nIf you don't pass in a second parameter to `LifeCyclePlugin#add(...)`, it will check the given object for the following methods: \"update\", \"preUpdate\", \"preupdate\", \"postUpdate\", \"postupdate\", \"render\" and \"destroy\". If they are found, they are automatically subscribed to the corresponding scene events.\r\n\r\nAlternatively, you can specify a custom mapping from Scene event name to method name:\r\n\r\n```js\r\nclass CustomPlayer {\r\n  draw() {\r\n    console.log(\"Alias for render\");\r\n  }\r\n  kill() {\r\n    console.log(\"Alias for destroy!\");\r\n  }\r\n}\r\n\r\nconst player = new CustomPlayer();\r\n\r\nthis.lifecycle.add(player, {\r\n  render: object.draw,\r\n  destroy: object.kill\r\n});\r\n```\r\n\r\nTODO: better example with custom mapping & showing how each method hook is optional.\r\n\r\n## Development\r\n\r\nThe project is controlled by npm scripts and uses cypress & jest for testing. Cypress is used for end-to-end verification that the plugin works as expected with Phaser. Jest is used for unit testing the plugin (via heavy mocking since Phaser headless mode is not complete).\r\n\r\n- The `watch` and `build` tasks will build the plugin source in library/ or the projects in end-to-end-tests/\r\n- The `serve` task opens the whole project (starting at the root) in a server\r\n- The `dev` task will build & watch the library, tests and open up the server. This is useful for creating tests and updating the library.\r\n- The `dev:cypress` task will build & watch the library & tests, as well as open up cypress in headed mode. This is useful for checking out individual tests and debugging them.\r\n- The `test:cypress` task will build the tests and run cypress in headless mode to check all end-to-end tests.\r\n- The `test:jest` will run the jest tests.\r\n\r\n## Tests\r\n\r\nThe cypress tests rely on a particular structure:\r\n\r\n- Each test game inside of \"end-to-end-tests/\" should have an \"index.html\" file as the entry point. \"src/js/index.js\" will be compiled to \"build/js/index.js\" by webpack. (Cypress doesn't support `type=\"module\"` on scripts, so this is necessary if we need modules.)\r\n- Each test has access to `test-utils.js` which provides `startTest`, `passTest` and `failTest` methods. Call `startTest` at the beginning and pass/fail when the test passes/fails. This manipulates in the DOM in a way that cypress is expecting.\r\n- Each test in \"cypress/integration/\" simply loads up the specified URL and waits for it to pass or timeout. (Technically, startTest and failTest are ignored, but they are useful for visual inspection of a test.)\r\n\r\nThe jest unit tests rely on a simple mocking of Phaser. They are stored inside \"src/\". Once Phaser headless is available, this testing structure could be re-evaluated.\r\n\r\n## Similar Work\r\n\r\nsamme's nice [phaser-plugin-update](https://github.com/samme/phaser-plugin-update) is similar, but just focused on update, whereas our use case required more of Phaser's life cycle hooks.\r\n",
     "longname": "C:\\Users\\mikewesthad\\Documents\\GitHub\\phaser-lifecycle-plugin\\README.md",
     "name": "./README.md",
     "static": true,
@@ -889,7 +902,7 @@
   },
   {
     "kind": "packageJSON",
-    "content": "{\r\n  \"name\": \"phaser-lifecycle-plugin\",\r\n  \"version\": \"0.0.1\",\r\n  \"description\": \"A Phaser 3 plugin to make it easier to have custom objects hook into Phaser's lifecycle events - preupdate, postupdate, etc.\",\r\n  \"main\": \"dist/phaser-lifecycle-plugin.min.js\",\r\n  \"files\": [\r\n    \"src/!(mocks|tests)\",\r\n    \"dist\"\r\n  ],\r\n  \"scripts\": {\r\n    \"build:library\": \"webpack --mode production --config config/webpack.config.js\",\r\n    \"build:tests\": \"webpack --mode development --config config/webpack.test.config.js\",\r\n    \"watch:library\": \"webpack --mode development --config config/webpack.config.js --watch\",\r\n    \"watch:tests\": \"webpack --mode development --config config/webpack.test.config.js --watch\",\r\n    \"serve\": \"browser-sync start --server \\\".\\\" --directory --watch --startPath \\\"/end-to-end-tests\\\"\",\r\n    \"dev\": \"concurrently \\\"npm run watch:tests\\\" \\\"npm run watch:library\\\" \\\"npm run serve\\\"\",\r\n    \"dev:cypress\": \"concurrently \\\"npm run watch:tests\\\" \\\"npm run watch:library\\\" \\\"cypress open\\\"\",\r\n    \"test:jest\": \"jest --config=./config/jest.config.js\",\r\n    \"pretest:cypress\": \"npm run build:tests\",\r\n    \"test:cypress\": \"cypress run\",\r\n    \"doc\": \"esdoc -c ./config/esdoc.json\",\r\n    \"predeploy:doc\": \"npm run doc\",\r\n    \"deploy:doc\": \"gh-pages --branch gh-pages --dist ./docs/build --dest docs\",\r\n    \"prepublishOnly\": \"npm run build:library\",\r\n    \"pull-types\": \"curl https://raw.githubusercontent.com/photonstorm/phaser3-docs/master/typescript/phaser.d.ts --create-dirs --location --output ./types/phaser.d.ts\"\r\n  },\r\n  \"repository\": {\r\n    \"type\": \"git\",\r\n    \"url\": \"git+https://github.com/sporadic-labs/phaser-lifecycle-plugin.git\"\r\n  },\r\n  \"keywords\": [\r\n    \"phaser\",\r\n    \"phaser plugin\",\r\n    \"game engine\"\r\n  ],\r\n  \"prettier\": {\r\n    \"printWidth\": 100\r\n  },\r\n  \"author\": \"Michael Hadley\",\r\n  \"license\": \"MIT\",\r\n  \"bugs\": {\r\n    \"url\": \"https://github.com/sporadic-labs/phaser-lifecycle-plugin/issues\"\r\n  },\r\n  \"homepage\": \"https://github.com/sporadic-labs/phaser-lifecycle-plugin#readme\",\r\n  \"devDependencies\": {\r\n    \"babel-core\": \"^6.26.3\",\r\n    \"babel-jest\": \"^23.4.2\",\r\n    \"babel-loader\": \"^7.1.5\",\r\n    \"babel-preset-env\": \"^1.7.0\",\r\n    \"browser-sync\": \"^2.24.6\",\r\n    \"concurrently\": \"^3.6.1\",\r\n    \"cypress\": \"^3.1.0\",\r\n    \"esdoc\": \"^1.1.0\",\r\n    \"esdoc-inject-style-plugin\": \"^1.0.0\",\r\n    \"esdoc-standard-plugin\": \"^1.0.0\",\r\n    \"eslint\": \"^5.4.0\",\r\n    \"eslint-config-prettier\": \"^3.0.1\",\r\n    \"eslint-plugin-prettier\": \"^2.6.2\",\r\n    \"eventemitter3\": \"^3.1.0\",\r\n    \"gh-pages\": \"^1.2.0\",\r\n    \"jest\": \"^23.5.0\",\r\n    \"phaser\": \"^3.11.0\",\r\n    \"prettier\": \"^1.14.2\",\r\n    \"regenerator-runtime\": \"^0.12.1\",\r\n    \"uglifyjs-webpack-plugin\": \"^1.3.0\",\r\n    \"webpack\": \"^4.16.5\",\r\n    \"webpack-cli\": \"^3.1.0\"\r\n  }\r\n}\r\n",
+    "content": "{\n  \"name\": \"phaser-lifecycle-plugin\",\n  \"version\": \"0.0.2\",\n  \"description\": \"A Phaser 3 plugin to make it easier to have custom objects hook into Phaser's lifecycle events - preupdate, postupdate, etc.\",\n  \"main\": \"dist/phaser-lifecycle-plugin.min.js\",\n  \"files\": [\n    \"src/!(mocks|tests)\",\n    \"dist\"\n  ],\n  \"scripts\": {\n    \"build:library\": \"webpack --mode production --config config/webpack.config.js\",\n    \"build:tests\": \"webpack --mode development --config config/webpack.test.config.js\",\n    \"watch:library\": \"webpack --mode development --config config/webpack.config.js --watch\",\n    \"watch:tests\": \"webpack --mode development --config config/webpack.test.config.js --watch\",\n    \"serve\": \"browser-sync start --server \\\".\\\" --directory --watch --startPath \\\"/end-to-end-tests\\\"\",\n    \"dev\": \"concurrently \\\"npm run watch:tests\\\" \\\"npm run watch:library\\\" \\\"npm run serve\\\"\",\n    \"dev:cypress\": \"concurrently \\\"npm run watch:tests\\\" \\\"npm run watch:library\\\" \\\"cypress open\\\"\",\n    \"test:jest\": \"jest --config=./config/jest.config.js\",\n    \"pretest:cypress\": \"npm run build:tests\",\n    \"test:cypress\": \"cypress run\",\n    \"doc\": \"esdoc -c ./config/esdoc.json\",\n    \"predeploy:doc\": \"npm run doc\",\n    \"deploy:doc\": \"gh-pages --branch gh-pages --dist ./docs/build --dest docs\",\n    \"prepublishOnly\": \"npm run build:library\",\n    \"pull-types\": \"curl https://raw.githubusercontent.com/photonstorm/phaser3-docs/master/typescript/phaser.d.ts --create-dirs --location --output ./types/phaser.d.ts\"\n  },\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"git+https://github.com/sporadic-labs/phaser-lifecycle-plugin.git\"\n  },\n  \"keywords\": [\n    \"phaser\",\n    \"phaser plugin\",\n    \"game engine\"\n  ],\n  \"prettier\": {\n    \"printWidth\": 100\n  },\n  \"author\": \"Michael Hadley\",\n  \"license\": \"MIT\",\n  \"bugs\": {\n    \"url\": \"https://github.com/sporadic-labs/phaser-lifecycle-plugin/issues\"\n  },\n  \"peerDependencies\": {\n    \"phaser\": \"^3.11.0\"\n  },\n  \"homepage\": \"https://github.com/sporadic-labs/phaser-lifecycle-plugin#readme\",\n  \"devDependencies\": {\n    \"babel-core\": \"^6.26.3\",\n    \"babel-jest\": \"^23.4.2\",\n    \"babel-loader\": \"^7.1.5\",\n    \"babel-preset-env\": \"^1.7.0\",\n    \"browser-sync\": \"^2.24.6\",\n    \"concurrently\": \"^3.6.1\",\n    \"cypress\": \"^3.1.0\",\n    \"esdoc\": \"^1.1.0\",\n    \"esdoc-inject-style-plugin\": \"^1.0.0\",\n    \"esdoc-standard-plugin\": \"^1.0.0\",\n    \"eslint\": \"^5.4.0\",\n    \"eslint-config-prettier\": \"^3.0.1\",\n    \"eslint-plugin-prettier\": \"^2.6.2\",\n    \"eventemitter3\": \"^3.1.0\",\n    \"gh-pages\": \"^1.2.0\",\n    \"jest\": \"^23.5.0\",\n    \"phaser\": \"^3.11.0\",\n    \"prettier\": \"^1.14.2\",\n    \"regenerator-runtime\": \"^0.12.1\",\n    \"uglifyjs-webpack-plugin\": \"^1.3.0\",\n    \"webpack\": \"^4.16.5\",\n    \"webpack-cli\": \"^3.1.0\"\n  }\n}\n",
     "longname": "C:\\Users\\mikewesthad\\Documents\\GitHub\\phaser-lifecycle-plugin\\package.json",
     "name": "package.json",
     "static": true,
@@ -898,7 +911,7 @@
   {
     "kind": "manualIndex",
     "globalIndex": true,
-    "content": "# Phaser Lifecycle Plugin\r\n\r\nA Phaser 3 plugin to make it easier to have custom objects hook into Phaser's lifecycle events - preupdate, postupdate, etc.\r\n\r\nNote: this plugin is still in progress and will be updated to an official release with docs soon!\r\n\r\nTODO: insert small snippet example here.\r\n\r\nCheck out the HTML documentation [here](https://sporadic-labs.github.io/phaser-lifecycle-plugin/docs/manual/README.html).\r\n\r\n## Why\r\n\r\nThe plugin that wraps around Phaser's event system (which is based on EventEmitter3). This allows us to avoid the issues around the EventEmitter3 library where the event emitter caches the listeners at the start of an event. E.g. at the beginning of an \"update\" event, the array of listeners is cached. That leads to bugs if a listener gets unsubscribed during an event, a listener is destroyed during the physics system's update. That listener may still get invoked during update. This plugin immediately unsubscribes the listener.\r\n\r\n## Installation\r\n\r\nYou can install this plugin globally as a script, or locally as a module using your bundler of choice.\r\n\r\n### As a Script\r\n\r\nYou can drop in any of the transpiled code into your project as a standalone script. Choose the version that you want:\r\n\r\n- [minified code](https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.min.js) & optional [source map](https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.min.js.map)\r\n- [unminified code](https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.js) & optional [source map](https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.js.map)\r\n\r\nE.g. if you wanted the minified code, you would add this to your HTML:\r\n\r\n```html\r\n<script src=\"phaser-lifecycle-plugin.min.js\"></script>\r\n```\r\n\r\nOr use the jsdelivr CDN:\r\n\r\n```html\r\n<script src=\"//cdn.jsdelivr.net/npm/phaser-lifecycle-plugin\"></script>\r\n```\r\n\r\nNow you can use the global `PhaserLifecyclePlugin`. See [usage](#usage) for how to use the plugin.\r\n\r\n### As a Module\r\n\r\nInstall via npm:\r\n\r\n```\r\nnpm install --save phaser-lifecycle-plugin\r\n```\r\n\r\nTo use the transpiled and minified distribution of the library:\r\n\r\n```js\r\nimport PhaserLifecyclePlugin from \"phaser-lifecycle-plugin\";\r\n```\r\n\r\nTo use the raw library (so you can transpile it to match your own project settings):\r\n\r\n```js\r\nimport PhaserLifecyclePlugin from \"phaser-lifecycle-plugin/src\";\r\n```\r\n\r\nSee [usage](#usage) for how to use the plugin.\r\n\r\n## Usage\r\n\r\n### Initial Setup\r\n\r\nWhen setting up your game config, add the plugin:\r\n\r\n```js\r\nconst config = {\r\n  // ...\r\n\r\n  // Install the scene plugin\r\n  plugins: {\r\n    scene: [\r\n      {\r\n        plugin: PhaserLifecyclePlugin, // The plugin class\r\n        key: \"lifecycle\", // Where to store in Scene.Systems, e.g. scene.sys.lifecycle\r\n        mapping: \"lifecycle\" // Where to store in the Scene, e.g. scene.lifecycle\r\n      }\r\n    ]\r\n  }\r\n};\r\n\r\nconst game = new Phaser.Game(config);\r\n```\r\n\r\nNow, within a scene, you can use `this.lifecycle` to access the plugin instance.\r\n\r\n### Usage in Scene\r\n\r\nWithin a scene, you can now:\r\n\r\n```js\r\nclass CustomPlayer {\r\n  update() {\r\n    console.log(\"Update!\");\r\n  }\r\n  preUpdate() {\r\n    console.log(\"Before update!\");\r\n  }\r\n  postUpdate() {\r\n    console.log(\"After update!\");\r\n  }\r\n}\r\n\r\nconst player = new CustomPlayer();\r\nthis.lifecycle.add(player);\r\n```\r\n\r\nAnd the player's `update`, `preUpdate` and `postUpdate` methods will be invoked in sync with the scene events. Running `this.lifecycle.remove(player)` will stop those methods from being invoked.\r\n\r\nTODO: better example with custom mapping & showing how each method hook is optional.\r\n\r\n## Development\r\n\r\nThe project is controlled by npm scripts and uses cypress & jest for testing. Cypress is used for end-to-end verification that the plugin works as expected with Phaser. Jest is used for unit testing the plugin (via heavy mocking since Phaser headless mode is not complete).\r\n\r\n- The `watch` and `build` tasks will build the plugin source in library/ or the projects in end-to-end-tests/\r\n- The `serve` task opens the whole project (starting at the root) in a server\r\n- The `dev` task will build & watch the library, tests and open up the server. This is useful for creating tests and updating the library.\r\n- The `dev:cypress` task will build & watch the library & tests, as well as open up cypress in headed mode. This is useful for checking out individual tests and debugging them.\r\n- The `test:cypress` task will build the tests and run cypress in headless mode to check all end-to-end tests.\r\n- The `test:jest` will run the jest tests.\r\n\r\n## Tests\r\n\r\nThe cypress tests rely on a particular structure:\r\n\r\n- Each test game inside of \"end-to-end-tests/\" should have an \"index.html\" file as the entry point. \"src/js/index.js\" will be compiled to \"build/js/index.js\" by webpack. (Cypress doesn't support `type=\"module\"` on scripts, so this is necessary if we need modules.)\r\n- Each test has access to `test-utils.js` which provides `startTest`, `passTest` and `failTest` methods. Call `startTest` at the beginning and pass/fail when the test passes/fails. This manipulates in the DOM in a way that cypress is expecting.\r\n- Each test in \"cypress/integration/\" simply loads up the specified URL and waits for it to pass or timeout. (Technically, startTest and failTest are ignored, but they are useful for visual inspection of a test.)\r\n\r\nThe jest unit tests rely on a simple mocking of Phaser. They are stored inside \"src/\". Once Phaser headless is available, this testing structure could be re-evaluated.\r\n\r\n## Similar Work\r\n\r\nsamme's nice [phaser-plugin-update](https://github.com/samme/phaser-plugin-update) is similar, but just focused on update, whereas our use case requires more of Phaser's life cycle hooks.\r\n",
+    "content": "# Phaser Lifecycle Plugin\r\n\r\nA Phaser 3 plugin to make it easier to have custom objects hook into Phaser's lifecycle events - preupdate, postupdate, etc.\r\n\r\nNote: this plugin is still in progress. It's something we've been using internally and will update to an official release with docs soon!\r\n\r\n```js\r\nclass CustomPlayer {\r\n  update() {\r\n    console.log(\"Update!\");\r\n  }\r\n  preUpdate() {\r\n    console.log(\"Before update!\");\r\n  }\r\n  postUpdate() {\r\n    console.log(\"After update!\");\r\n  }\r\n}\r\n\r\nconst player = new CustomPlayer();\r\n\r\n// Hook the player's update, preUpdate and postUpdate up to Scene events\r\nthis.lifecycle.add(player);\r\n\r\n// ...\r\n\r\n// Some time later, you can unsubscribe:\r\nthis.lifecycle.remove(player);\r\n```\r\n\r\nCheck out the HTML documentation [here](https://sporadic-labs.github.io/phaser-lifecycle-plugin/docs/manual/README.html).\r\n\r\n## Why\r\n\r\nTwo main reasons:\r\n\r\n- This reduces boilerplate for creating custom game objects and components that _don't_ subclass Phaser's game objects. TODO: demo the component pattern.\r\n- The plugin wraps around the event system (which is based on EventEmitter3) and proxies the events, fixing a common problem that can arise with EventEmitter3. Emitters cache their listeners at the start of an event, which can lead to unsubscribed listeners still being invoked one more time post-unsubscribing. With this plugin, any objects that are removed are removed immediately - no extra events.\r\n\r\n## Installation\r\n\r\nYou can install this plugin globally as a script, or locally as a module using your bundler of choice.\r\n\r\n### As a Script\r\n\r\nYou can drop in any of the transpiled code into your project as a standalone script. Choose the version that you want:\r\n\r\n- [minified code](https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.min.js) & optional [source map](https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.min.js.map)\r\n- [unminified code](https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.js) & optional [source map](https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.js.map)\r\n\r\nE.g. if you wanted the minified code, you would add this to your HTML:\r\n\r\n```html\r\n<script src=\"phaser-lifecycle-plugin.min.js\"></script>\r\n```\r\n\r\nOr use the jsdelivr CDN:\r\n\r\n```html\r\n<script src=\"//cdn.jsdelivr.net/npm/phaser-lifecycle-plugin\"></script>\r\n```\r\n\r\nNow you can use the global `PhaserLifecyclePlugin`. See [usage](#usage) for how to use the plugin.\r\n\r\n### As a Module\r\n\r\nInstall via npm:\r\n\r\n```\r\nnpm install --save phaser-lifecycle-plugin\r\n```\r\n\r\nTo use the transpiled and minified distribution of the library:\r\n\r\n```js\r\nimport PhaserLifecyclePlugin from \"phaser-lifecycle-plugin\";\r\n```\r\n\r\nTo use the raw library (so you can transpile it to match your own project settings):\r\n\r\n```js\r\nimport PhaserLifecyclePlugin from \"phaser-lifecycle-plugin/src\";\r\n```\r\n\r\nSee [usage](#usage) for how to use the plugin.\r\n\r\n## Usage\r\n\r\n### Initial Setup\r\n\r\nWhen setting up your game config, add the plugin:\r\n\r\n```js\r\nconst config = {\r\n  // ...\r\n\r\n  // Install the scene plugin\r\n  plugins: {\r\n    scene: [\r\n      {\r\n        plugin: PhaserLifecyclePlugin, // The plugin class\r\n        key: \"lifecycle\", // Where to store in Scene.Systems, e.g. scene.sys.lifecycle\r\n        mapping: \"lifecycle\" // Where to store in the Scene, e.g. scene.lifecycle\r\n      }\r\n    ]\r\n  }\r\n};\r\n\r\nconst game = new Phaser.Game(config);\r\n```\r\n\r\nNow, within a scene, you can use `this.lifecycle` to access the plugin instance.\r\n\r\n### Usage in Scene\r\n\r\nWithin a scene, you can now:\r\n\r\n```js\r\nclass CustomPlayer {\r\n  update() {\r\n    console.log(\"Update!\");\r\n  }\r\n  preUpdate() {\r\n    console.log(\"Before update!\");\r\n  }\r\n  postUpdate() {\r\n    console.log(\"After update!\");\r\n  }\r\n}\r\n\r\nconst player = new CustomPlayer();\r\nthis.lifecycle.add(player);\r\n```\r\n\r\nAnd the player's `update`, `preUpdate` and `postUpdate` methods will be invoked in sync with the scene events. Running `this.lifecycle.remove(player)` will stop those methods from being invoked.\r\n\r\nIf you don't pass in a second parameter to `LifeCyclePlugin#add(...)`, it will check the given object for the following methods: \"update\", \"preUpdate\", \"preupdate\", \"postUpdate\", \"postupdate\", \"render\" and \"destroy\". If they are found, they are automatically subscribed to the corresponding scene events.\r\n\r\nAlternatively, you can specify a custom mapping from Scene event name to method name:\r\n\r\n```js\r\nclass CustomPlayer {\r\n  draw() {\r\n    console.log(\"Alias for render\");\r\n  }\r\n  kill() {\r\n    console.log(\"Alias for destroy!\");\r\n  }\r\n}\r\n\r\nconst player = new CustomPlayer();\r\n\r\nthis.lifecycle.add(player, {\r\n  render: object.draw,\r\n  destroy: object.kill\r\n});\r\n```\r\n\r\nTODO: better example with custom mapping & showing how each method hook is optional.\r\n\r\n## Development\r\n\r\nThe project is controlled by npm scripts and uses cypress & jest for testing. Cypress is used for end-to-end verification that the plugin works as expected with Phaser. Jest is used for unit testing the plugin (via heavy mocking since Phaser headless mode is not complete).\r\n\r\n- The `watch` and `build` tasks will build the plugin source in library/ or the projects in end-to-end-tests/\r\n- The `serve` task opens the whole project (starting at the root) in a server\r\n- The `dev` task will build & watch the library, tests and open up the server. This is useful for creating tests and updating the library.\r\n- The `dev:cypress` task will build & watch the library & tests, as well as open up cypress in headed mode. This is useful for checking out individual tests and debugging them.\r\n- The `test:cypress` task will build the tests and run cypress in headless mode to check all end-to-end tests.\r\n- The `test:jest` will run the jest tests.\r\n\r\n## Tests\r\n\r\nThe cypress tests rely on a particular structure:\r\n\r\n- Each test game inside of \"end-to-end-tests/\" should have an \"index.html\" file as the entry point. \"src/js/index.js\" will be compiled to \"build/js/index.js\" by webpack. (Cypress doesn't support `type=\"module\"` on scripts, so this is necessary if we need modules.)\r\n- Each test has access to `test-utils.js` which provides `startTest`, `passTest` and `failTest` methods. Call `startTest` at the beginning and pass/fail when the test passes/fails. This manipulates in the DOM in a way that cypress is expecting.\r\n- Each test in \"cypress/integration/\" simply loads up the specified URL and waits for it to pass or timeout. (Technically, startTest and failTest are ignored, but they are useful for visual inspection of a test.)\r\n\r\nThe jest unit tests rely on a simple mocking of Phaser. They are stored inside \"src/\". Once Phaser headless is available, this testing structure could be re-evaluated.\r\n\r\n## Similar Work\r\n\r\nsamme's nice [phaser-plugin-update](https://github.com/samme/phaser-plugin-update) is similar, but just focused on update, whereas our use case required more of Phaser's life cycle hooks.\r\n",
     "longname": "C:\\Users\\mikewesthad\\Documents\\GitHub\\phaser-lifecycle-plugin\\README.md",
     "name": "README.md",
     "static": true,
@@ -908,7 +921,7 @@
     "kind": "manual",
     "longname": "C:\\Users\\mikewesthad\\Documents\\GitHub\\phaser-lifecycle-plugin\\README.md",
     "name": "README.md",
-    "content": "# Phaser Lifecycle Plugin\r\n\r\nA Phaser 3 plugin to make it easier to have custom objects hook into Phaser's lifecycle events - preupdate, postupdate, etc.\r\n\r\nNote: this plugin is still in progress and will be updated to an official release with docs soon!\r\n\r\nTODO: insert small snippet example here.\r\n\r\nCheck out the HTML documentation [here](https://sporadic-labs.github.io/phaser-lifecycle-plugin/docs/manual/README.html).\r\n\r\n## Why\r\n\r\nThe plugin that wraps around Phaser's event system (which is based on EventEmitter3). This allows us to avoid the issues around the EventEmitter3 library where the event emitter caches the listeners at the start of an event. E.g. at the beginning of an \"update\" event, the array of listeners is cached. That leads to bugs if a listener gets unsubscribed during an event, a listener is destroyed during the physics system's update. That listener may still get invoked during update. This plugin immediately unsubscribes the listener.\r\n\r\n## Installation\r\n\r\nYou can install this plugin globally as a script, or locally as a module using your bundler of choice.\r\n\r\n### As a Script\r\n\r\nYou can drop in any of the transpiled code into your project as a standalone script. Choose the version that you want:\r\n\r\n- [minified code](https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.min.js) & optional [source map](https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.min.js.map)\r\n- [unminified code](https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.js) & optional [source map](https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.js.map)\r\n\r\nE.g. if you wanted the minified code, you would add this to your HTML:\r\n\r\n```html\r\n<script src=\"phaser-lifecycle-plugin.min.js\"></script>\r\n```\r\n\r\nOr use the jsdelivr CDN:\r\n\r\n```html\r\n<script src=\"//cdn.jsdelivr.net/npm/phaser-lifecycle-plugin\"></script>\r\n```\r\n\r\nNow you can use the global `PhaserLifecyclePlugin`. See [usage](#usage) for how to use the plugin.\r\n\r\n### As a Module\r\n\r\nInstall via npm:\r\n\r\n```\r\nnpm install --save phaser-lifecycle-plugin\r\n```\r\n\r\nTo use the transpiled and minified distribution of the library:\r\n\r\n```js\r\nimport PhaserLifecyclePlugin from \"phaser-lifecycle-plugin\";\r\n```\r\n\r\nTo use the raw library (so you can transpile it to match your own project settings):\r\n\r\n```js\r\nimport PhaserLifecyclePlugin from \"phaser-lifecycle-plugin/src\";\r\n```\r\n\r\nSee [usage](#usage) for how to use the plugin.\r\n\r\n## Usage\r\n\r\n### Initial Setup\r\n\r\nWhen setting up your game config, add the plugin:\r\n\r\n```js\r\nconst config = {\r\n  // ...\r\n\r\n  // Install the scene plugin\r\n  plugins: {\r\n    scene: [\r\n      {\r\n        plugin: PhaserLifecyclePlugin, // The plugin class\r\n        key: \"lifecycle\", // Where to store in Scene.Systems, e.g. scene.sys.lifecycle\r\n        mapping: \"lifecycle\" // Where to store in the Scene, e.g. scene.lifecycle\r\n      }\r\n    ]\r\n  }\r\n};\r\n\r\nconst game = new Phaser.Game(config);\r\n```\r\n\r\nNow, within a scene, you can use `this.lifecycle` to access the plugin instance.\r\n\r\n### Usage in Scene\r\n\r\nWithin a scene, you can now:\r\n\r\n```js\r\nclass CustomPlayer {\r\n  update() {\r\n    console.log(\"Update!\");\r\n  }\r\n  preUpdate() {\r\n    console.log(\"Before update!\");\r\n  }\r\n  postUpdate() {\r\n    console.log(\"After update!\");\r\n  }\r\n}\r\n\r\nconst player = new CustomPlayer();\r\nthis.lifecycle.add(player);\r\n```\r\n\r\nAnd the player's `update`, `preUpdate` and `postUpdate` methods will be invoked in sync with the scene events. Running `this.lifecycle.remove(player)` will stop those methods from being invoked.\r\n\r\nTODO: better example with custom mapping & showing how each method hook is optional.\r\n\r\n## Development\r\n\r\nThe project is controlled by npm scripts and uses cypress & jest for testing. Cypress is used for end-to-end verification that the plugin works as expected with Phaser. Jest is used for unit testing the plugin (via heavy mocking since Phaser headless mode is not complete).\r\n\r\n- The `watch` and `build` tasks will build the plugin source in library/ or the projects in end-to-end-tests/\r\n- The `serve` task opens the whole project (starting at the root) in a server\r\n- The `dev` task will build & watch the library, tests and open up the server. This is useful for creating tests and updating the library.\r\n- The `dev:cypress` task will build & watch the library & tests, as well as open up cypress in headed mode. This is useful for checking out individual tests and debugging them.\r\n- The `test:cypress` task will build the tests and run cypress in headless mode to check all end-to-end tests.\r\n- The `test:jest` will run the jest tests.\r\n\r\n## Tests\r\n\r\nThe cypress tests rely on a particular structure:\r\n\r\n- Each test game inside of \"end-to-end-tests/\" should have an \"index.html\" file as the entry point. \"src/js/index.js\" will be compiled to \"build/js/index.js\" by webpack. (Cypress doesn't support `type=\"module\"` on scripts, so this is necessary if we need modules.)\r\n- Each test has access to `test-utils.js` which provides `startTest`, `passTest` and `failTest` methods. Call `startTest` at the beginning and pass/fail when the test passes/fails. This manipulates in the DOM in a way that cypress is expecting.\r\n- Each test in \"cypress/integration/\" simply loads up the specified URL and waits for it to pass or timeout. (Technically, startTest and failTest are ignored, but they are useful for visual inspection of a test.)\r\n\r\nThe jest unit tests rely on a simple mocking of Phaser. They are stored inside \"src/\". Once Phaser headless is available, this testing structure could be re-evaluated.\r\n\r\n## Similar Work\r\n\r\nsamme's nice [phaser-plugin-update](https://github.com/samme/phaser-plugin-update) is similar, but just focused on update, whereas our use case requires more of Phaser's life cycle hooks.\r\n",
+    "content": "# Phaser Lifecycle Plugin\r\n\r\nA Phaser 3 plugin to make it easier to have custom objects hook into Phaser's lifecycle events - preupdate, postupdate, etc.\r\n\r\nNote: this plugin is still in progress. It's something we've been using internally and will update to an official release with docs soon!\r\n\r\n```js\r\nclass CustomPlayer {\r\n  update() {\r\n    console.log(\"Update!\");\r\n  }\r\n  preUpdate() {\r\n    console.log(\"Before update!\");\r\n  }\r\n  postUpdate() {\r\n    console.log(\"After update!\");\r\n  }\r\n}\r\n\r\nconst player = new CustomPlayer();\r\n\r\n// Hook the player's update, preUpdate and postUpdate up to Scene events\r\nthis.lifecycle.add(player);\r\n\r\n// ...\r\n\r\n// Some time later, you can unsubscribe:\r\nthis.lifecycle.remove(player);\r\n```\r\n\r\nCheck out the HTML documentation [here](https://sporadic-labs.github.io/phaser-lifecycle-plugin/docs/manual/README.html).\r\n\r\n## Why\r\n\r\nTwo main reasons:\r\n\r\n- This reduces boilerplate for creating custom game objects and components that _don't_ subclass Phaser's game objects. TODO: demo the component pattern.\r\n- The plugin wraps around the event system (which is based on EventEmitter3) and proxies the events, fixing a common problem that can arise with EventEmitter3. Emitters cache their listeners at the start of an event, which can lead to unsubscribed listeners still being invoked one more time post-unsubscribing. With this plugin, any objects that are removed are removed immediately - no extra events.\r\n\r\n## Installation\r\n\r\nYou can install this plugin globally as a script, or locally as a module using your bundler of choice.\r\n\r\n### As a Script\r\n\r\nYou can drop in any of the transpiled code into your project as a standalone script. Choose the version that you want:\r\n\r\n- [minified code](https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.min.js) & optional [source map](https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.min.js.map)\r\n- [unminified code](https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.js) & optional [source map](https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.js.map)\r\n\r\nE.g. if you wanted the minified code, you would add this to your HTML:\r\n\r\n```html\r\n<script src=\"phaser-lifecycle-plugin.min.js\"></script>\r\n```\r\n\r\nOr use the jsdelivr CDN:\r\n\r\n```html\r\n<script src=\"//cdn.jsdelivr.net/npm/phaser-lifecycle-plugin\"></script>\r\n```\r\n\r\nNow you can use the global `PhaserLifecyclePlugin`. See [usage](#usage) for how to use the plugin.\r\n\r\n### As a Module\r\n\r\nInstall via npm:\r\n\r\n```\r\nnpm install --save phaser-lifecycle-plugin\r\n```\r\n\r\nTo use the transpiled and minified distribution of the library:\r\n\r\n```js\r\nimport PhaserLifecyclePlugin from \"phaser-lifecycle-plugin\";\r\n```\r\n\r\nTo use the raw library (so you can transpile it to match your own project settings):\r\n\r\n```js\r\nimport PhaserLifecyclePlugin from \"phaser-lifecycle-plugin/src\";\r\n```\r\n\r\nSee [usage](#usage) for how to use the plugin.\r\n\r\n## Usage\r\n\r\n### Initial Setup\r\n\r\nWhen setting up your game config, add the plugin:\r\n\r\n```js\r\nconst config = {\r\n  // ...\r\n\r\n  // Install the scene plugin\r\n  plugins: {\r\n    scene: [\r\n      {\r\n        plugin: PhaserLifecyclePlugin, // The plugin class\r\n        key: \"lifecycle\", // Where to store in Scene.Systems, e.g. scene.sys.lifecycle\r\n        mapping: \"lifecycle\" // Where to store in the Scene, e.g. scene.lifecycle\r\n      }\r\n    ]\r\n  }\r\n};\r\n\r\nconst game = new Phaser.Game(config);\r\n```\r\n\r\nNow, within a scene, you can use `this.lifecycle` to access the plugin instance.\r\n\r\n### Usage in Scene\r\n\r\nWithin a scene, you can now:\r\n\r\n```js\r\nclass CustomPlayer {\r\n  update() {\r\n    console.log(\"Update!\");\r\n  }\r\n  preUpdate() {\r\n    console.log(\"Before update!\");\r\n  }\r\n  postUpdate() {\r\n    console.log(\"After update!\");\r\n  }\r\n}\r\n\r\nconst player = new CustomPlayer();\r\nthis.lifecycle.add(player);\r\n```\r\n\r\nAnd the player's `update`, `preUpdate` and `postUpdate` methods will be invoked in sync with the scene events. Running `this.lifecycle.remove(player)` will stop those methods from being invoked.\r\n\r\nIf you don't pass in a second parameter to `LifeCyclePlugin#add(...)`, it will check the given object for the following methods: \"update\", \"preUpdate\", \"preupdate\", \"postUpdate\", \"postupdate\", \"render\" and \"destroy\". If they are found, they are automatically subscribed to the corresponding scene events.\r\n\r\nAlternatively, you can specify a custom mapping from Scene event name to method name:\r\n\r\n```js\r\nclass CustomPlayer {\r\n  draw() {\r\n    console.log(\"Alias for render\");\r\n  }\r\n  kill() {\r\n    console.log(\"Alias for destroy!\");\r\n  }\r\n}\r\n\r\nconst player = new CustomPlayer();\r\n\r\nthis.lifecycle.add(player, {\r\n  render: object.draw,\r\n  destroy: object.kill\r\n});\r\n```\r\n\r\nTODO: better example with custom mapping & showing how each method hook is optional.\r\n\r\n## Development\r\n\r\nThe project is controlled by npm scripts and uses cypress & jest for testing. Cypress is used for end-to-end verification that the plugin works as expected with Phaser. Jest is used for unit testing the plugin (via heavy mocking since Phaser headless mode is not complete).\r\n\r\n- The `watch` and `build` tasks will build the plugin source in library/ or the projects in end-to-end-tests/\r\n- The `serve` task opens the whole project (starting at the root) in a server\r\n- The `dev` task will build & watch the library, tests and open up the server. This is useful for creating tests and updating the library.\r\n- The `dev:cypress` task will build & watch the library & tests, as well as open up cypress in headed mode. This is useful for checking out individual tests and debugging them.\r\n- The `test:cypress` task will build the tests and run cypress in headless mode to check all end-to-end tests.\r\n- The `test:jest` will run the jest tests.\r\n\r\n## Tests\r\n\r\nThe cypress tests rely on a particular structure:\r\n\r\n- Each test game inside of \"end-to-end-tests/\" should have an \"index.html\" file as the entry point. \"src/js/index.js\" will be compiled to \"build/js/index.js\" by webpack. (Cypress doesn't support `type=\"module\"` on scripts, so this is necessary if we need modules.)\r\n- Each test has access to `test-utils.js` which provides `startTest`, `passTest` and `failTest` methods. Call `startTest` at the beginning and pass/fail when the test passes/fails. This manipulates in the DOM in a way that cypress is expecting.\r\n- Each test in \"cypress/integration/\" simply loads up the specified URL and waits for it to pass or timeout. (Technically, startTest and failTest are ignored, but they are useful for visual inspection of a test.)\r\n\r\nThe jest unit tests rely on a simple mocking of Phaser. They are stored inside \"src/\". Once Phaser headless is available, this testing structure could be re-evaluated.\r\n\r\n## Similar Work\r\n\r\nsamme's nice [phaser-plugin-update](https://github.com/samme/phaser-plugin-update) is similar, but just focused on update, whereas our use case required more of Phaser's life cycle hooks.\r\n",
     "static": true,
     "access": "public"
   }

@@ -324,45 +324,39 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
-    "src/phaser-lifecycle-plugin.js~lifecycleplugin#ondestroy",
-    "class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-method-onDestroy",
-    "src/phaser-lifecycle-plugin.js~LifecyclePlugin#onDestroy",
+    "src/phaser-lifecycle-plugin.js~lifecycleplugin#destroy",
+    "class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-method-destroy",
+    "src/phaser-lifecycle-plugin.js~LifecyclePlugin#destroy",
     "method"
   ],
   [
-    "src/phaser-lifecycle-plugin.js~lifecycleplugin#onpostupdate",
-    "class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-method-onPostUpdate",
-    "src/phaser-lifecycle-plugin.js~LifecyclePlugin#onPostUpdate",
-    "method"
-  ],
-  [
-    "src/phaser-lifecycle-plugin.js~lifecycleplugin#onpreupdate",
-    "class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-method-onPreUpdate",
-    "src/phaser-lifecycle-plugin.js~LifecyclePlugin#onPreUpdate",
-    "method"
-  ],
-  [
-    "src/phaser-lifecycle-plugin.js~lifecycleplugin#onshutdown",
-    "class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-method-onShutdown",
-    "src/phaser-lifecycle-plugin.js~LifecyclePlugin#onShutdown",
-    "method"
-  ],
-  [
-    "src/phaser-lifecycle-plugin.js~lifecycleplugin#onupdate",
-    "class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-method-onUpdate",
-    "src/phaser-lifecycle-plugin.js~LifecyclePlugin#onUpdate",
-    "method"
-  ],
-  [
-    "src/phaser-lifecycle-plugin.js~lifecycleplugin#postupdatelisteners",
-    "class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-member-postUpdateListeners",
-    "src/phaser-lifecycle-plugin.js~LifecyclePlugin#postUpdateListeners",
+    "src/phaser-lifecycle-plugin.js~lifecycleplugin#eventhandlers",
+    "class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-member-eventHandlers",
+    "src/phaser-lifecycle-plugin.js~LifecyclePlugin#eventHandlers",
     "member"
   ],
   [
-    "src/phaser-lifecycle-plugin.js~lifecycleplugin#preupdatelisteners",
-    "class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-member-preUpdateListeners",
-    "src/phaser-lifecycle-plugin.js~LifecyclePlugin#preUpdateListeners",
+    "src/phaser-lifecycle-plugin.js~lifecycleplugin#eventnames",
+    "class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-member-eventNames",
+    "src/phaser-lifecycle-plugin.js~LifecyclePlugin#eventNames",
+    "member"
+  ],
+  [
+    "src/phaser-lifecycle-plugin.js~lifecycleplugin#listeners",
+    "class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-member-listeners",
+    "src/phaser-lifecycle-plugin.js~LifecyclePlugin#listeners",
+    "member"
+  ],
+  [
+    "src/phaser-lifecycle-plugin.js~lifecycleplugin#onsceneevent",
+    "class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-method-onSceneEvent",
+    "src/phaser-lifecycle-plugin.js~LifecyclePlugin#onSceneEvent",
+    "method"
+  ],
+  [
+    "src/phaser-lifecycle-plugin.js~lifecycleplugin#possiblemethodnames",
+    "class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-member-possibleMethodNames",
+    "src/phaser-lifecycle-plugin.js~LifecyclePlugin#possibleMethodNames",
     "member"
   ],
   [
@@ -372,21 +366,33 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "src/phaser-lifecycle-plugin.js~lifecycleplugin#removeall",
+    "class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-method-removeAll",
+    "src/phaser-lifecycle-plugin.js~LifecyclePlugin#removeAll",
+    "method"
+  ],
+  [
     "src/phaser-lifecycle-plugin.js~lifecycleplugin#scene",
     "class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-member-scene",
     "src/phaser-lifecycle-plugin.js~LifecyclePlugin#scene",
     "member"
   ],
   [
+    "src/phaser-lifecycle-plugin.js~lifecycleplugin#shutdown",
+    "class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-method-shutdown",
+    "src/phaser-lifecycle-plugin.js~LifecyclePlugin#shutdown",
+    "method"
+  ],
+  [
+    "src/phaser-lifecycle-plugin.js~lifecycleplugin#start",
+    "class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-method-start",
+    "src/phaser-lifecycle-plugin.js~LifecyclePlugin#start",
+    "method"
+  ],
+  [
     "src/phaser-lifecycle-plugin.js~lifecycleplugin#systems",
     "class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-member-systems",
     "src/phaser-lifecycle-plugin.js~LifecyclePlugin#systems",
-    "member"
-  ],
-  [
-    "src/phaser-lifecycle-plugin.js~lifecycleplugin#updatelisteners",
-    "class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-member-updateListeners",
-    "src/phaser-lifecycle-plugin.js~LifecyclePlugin#updateListeners",
     "member"
   ]
 ]

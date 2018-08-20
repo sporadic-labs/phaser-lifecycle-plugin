@@ -49,10 +49,35 @@
 
 <div class="content" data-ice="content"><div class="github-markdown">
   <div class="manual-user-index" data-ice="manualUserIndex"><h1 id="phaser-lifecycle-plugin">Phaser Lifecycle Plugin</h1><p>A Phaser 3 plugin to make it easier to have custom objects hook into Phaser&apos;s lifecycle events - preupdate, postupdate, etc.</p>
-<p>Note: this plugin is still in progress and will be updated to an official release with docs soon!</p>
-<p>TODO: insert small snippet example here.</p>
+<p>Note: this plugin is still in progress. It&apos;s something we&apos;ve been using internally and will update to an official release with docs soon!</p>
+<pre><code class="lang-js"><code class="source-code prettyprint">class CustomPlayer {
+  update() {
+    console.log(&quot;Update!&quot;);
+  }
+  preUpdate() {
+    console.log(&quot;Before update!&quot;);
+  }
+  postUpdate() {
+    console.log(&quot;After update!&quot;);
+  }
+}
+
+const player = new CustomPlayer();
+
+// Hook the player&apos;s update, preUpdate and postUpdate up to Scene events
+this.lifecycle.add(player);
+
+// ...
+
+// Some time later, you can unsubscribe:
+this.lifecycle.remove(player);</code>
+</code></pre>
 <p>Check out the HTML documentation <a href="https://sporadic-labs.github.io/phaser-lifecycle-plugin/docs/manual/README.html">here</a>.</p>
-<h2 id="why">Why</h2><p>The plugin that wraps around Phaser&apos;s event system (which is based on EventEmitter3). This allows us to avoid the issues around the EventEmitter3 library where the event emitter caches the listeners at the start of an event. E.g. at the beginning of an &quot;update&quot; event, the array of listeners is cached. That leads to bugs if a listener gets unsubscribed during an event, a listener is destroyed during the physics system&apos;s update. That listener may still get invoked during update. This plugin immediately unsubscribes the listener.</p>
+<h2 id="why">Why</h2><p>Two main reasons:</p>
+<ul>
+<li>This reduces boilerplate for creating custom game objects and components that <em>don&apos;t</em> subclass Phaser&apos;s game objects. TODO: demo the component pattern.</li>
+<li>The plugin wraps around the event system (which is based on EventEmitter3) and proxies the events, fixing a common problem that can arise with EventEmitter3. Emitters cache their listeners at the start of an event, which can lead to unsubscribed listeners still being invoked one more time post-unsubscribing. With this plugin, any objects that are removed are removed immediately - no extra events.</li>
+</ul>
 <h2 id="installation">Installation</h2><p>You can install this plugin globally as a script, or locally as a module using your bundler of choice.</p>
 <h3 id="as-a-script">As a Script</h3><p>You can drop in any of the transpiled code into your project as a standalone script. Choose the version that you want:</p>
 <ul>
@@ -111,6 +136,24 @@ const player = new CustomPlayer();
 this.lifecycle.add(player);</code>
 </code></pre>
 <p>And the player&apos;s <code>update</code>, <code>preUpdate</code> and <code>postUpdate</code> methods will be invoked in sync with the scene events. Running <code>this.lifecycle.remove(player)</code> will stop those methods from being invoked.</p>
+<p>If you don&apos;t pass in a second parameter to <code>LifeCyclePlugin#add(...)</code>, it will check the given object for the following methods: &quot;update&quot;, &quot;preUpdate&quot;, &quot;preupdate&quot;, &quot;postUpdate&quot;, &quot;postupdate&quot;, &quot;render&quot; and &quot;destroy&quot;. If they are found, they are automatically subscribed to the corresponding scene events.</p>
+<p>Alternatively, you can specify a custom mapping from Scene event name to method name:</p>
+<pre><code class="lang-js"><code class="source-code prettyprint">class CustomPlayer {
+  draw() {
+    console.log(&quot;Alias for render&quot;);
+  }
+  kill() {
+    console.log(&quot;Alias for destroy!&quot;);
+  }
+}
+
+const player = new CustomPlayer();
+
+this.lifecycle.add(player, {
+  render: object.draw,
+  destroy: object.kill
+});</code>
+</code></pre>
 <p>TODO: better example with custom mapping &amp; showing how each method hook is optional.</p>
 <h2 id="development">Development</h2><p>The project is controlled by npm scripts and uses cypress &amp; jest for testing. Cypress is used for end-to-end verification that the plugin works as expected with Phaser. Jest is used for unit testing the plugin (via heavy mocking since Phaser headless mode is not complete).</p>
 <ul>
@@ -128,7 +171,7 @@ this.lifecycle.add(player);</code>
 <li>Each test in &quot;cypress/integration/&quot; simply loads up the specified URL and waits for it to pass or timeout. (Technically, startTest and failTest are ignored, but they are useful for visual inspection of a test.)</li>
 </ul>
 <p>The jest unit tests rely on a simple mocking of Phaser. They are stored inside &quot;src/&quot;. Once Phaser headless is available, this testing structure could be re-evaluated.</p>
-<h2 id="similar-work">Similar Work</h2><p>samme&apos;s nice <a href="https://github.com/samme/phaser-plugin-update">phaser-plugin-update</a> is similar, but just focused on update, whereas our use case requires more of Phaser&apos;s life cycle hooks.</p>
+<h2 id="similar-work">Similar Work</h2><p>samme&apos;s nice <a href="https://github.com/samme/phaser-plugin-update">phaser-plugin-update</a> is similar, but just focused on update, whereas our use case required more of Phaser&apos;s life cycle hooks.</p>
 </div>
 
   
@@ -137,7 +180,31 @@ this.lifecycle.add(player);</code>
     
   <div class="manual-card-wrap" data-ice="cards">
       <div class="manual-card">
-        <div data-ice="card"><h1>Phaser Lifecycle Plugin</h1><p>A Phaser 3 plugin to make it easier to have custom objects hook into Phaser&apos;s lifecycle events - preupdate, postupdate, etc.</p><p>Note: this plugin is still in progress and will be updated to an official release with docs soon!</p><p>TODO: insert small snippet example here.</p><p>Check out the HTML documentation <a href="https://sporadic-labs.github.io/phaser-lifecycle-plugin/docs/manual/README.html">here</a>.</p><h2>Why</h2><p>The plugin that wraps around Phaser&apos;s event system (which is based on EventEmitter3). This allows us to avoid the issues around the EventEmitter3 library where the event emitter caches the listeners at the start of an event. E.g. at the beginning of an &quot;update&quot; event, the array of listeners is cached. That leads to bugs if a listener gets unsubscribed during an event, a listener is destroyed during the physics system&apos;s update. That listener may still get invoked during update. This plugin immediately unsubscribes the listener.</p><h2>Installation</h2><p>You can install this plugin globally as a script, or locally as a module using your bundler of choice.</p><h3>As a Script</h3><p>You can drop in any of the transpiled code into your project as a standalone script. Choose the version that you want:</p><ul>
+        <div data-ice="card"><h1>Phaser Lifecycle Plugin</h1><p>A Phaser 3 plugin to make it easier to have custom objects hook into Phaser&apos;s lifecycle events - preupdate, postupdate, etc.</p><p>Note: this plugin is still in progress. It&apos;s something we&apos;ve been using internally and will update to an official release with docs soon!</p><pre><code class="lang-js"><code class="source-code prettyprint">class CustomPlayer {
+  update() {
+    console.log(&quot;Update!&quot;);
+  }
+  preUpdate() {
+    console.log(&quot;Before update!&quot;);
+  }
+  postUpdate() {
+    console.log(&quot;After update!&quot;);
+  }
+}
+
+const player = new CustomPlayer();
+
+// Hook the player&apos;s update, preUpdate and postUpdate up to Scene events
+this.lifecycle.add(player);
+
+// ...
+
+// Some time later, you can unsubscribe:
+this.lifecycle.remove(player);</code>
+</code></pre><p>Check out the HTML documentation <a href="https://sporadic-labs.github.io/phaser-lifecycle-plugin/docs/manual/README.html">here</a>.</p><h2>Why</h2><p>Two main reasons:</p><ul>
+<li>This reduces boilerplate for creating custom game objects and components that <em>don&apos;t</em> subclass Phaser&apos;s game objects. TODO: demo the component pattern.</li>
+<li>The plugin wraps around the event system (which is based on EventEmitter3) and proxies the events, fixing a common problem that can arise with EventEmitter3. Emitters cache their listeners at the start of an event, which can lead to unsubscribed listeners still being invoked one more time post-unsubscribing. With this plugin, any objects that are removed are removed immediately - no extra events.</li>
+</ul><h2>Installation</h2><p>You can install this plugin globally as a script, or locally as a module using your bundler of choice.</p><h3>As a Script</h3><p>You can drop in any of the transpiled code into your project as a standalone script. Choose the version that you want:</p><ul>
 <li><a href="https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.min.js">minified code</a> &amp; optional <a href="https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.min.js.map">source map</a></li>
 <li><a href="https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.js">unminified code</a> &amp; optional <a href="https://raw.githubusercontent.com/sporadic-labs/phaser-lifecycle-plugin/master/dist/phaser-lifecycle-plugin.js.map">source map</a></li>
 </ul><p>E.g. if you wanted the minified code, you would add this to your HTML:</p><pre><code class="lang-html"><code class="source-code prettyprint">&lt;script src=&quot;phaser-lifecycle-plugin.min.js&quot;&gt;&lt;/script&gt;</code>
@@ -175,7 +242,22 @@ const game = new Phaser.Game(config);</code>
 
 const player = new CustomPlayer();
 this.lifecycle.add(player);</code>
-</code></pre><p>And the player&apos;s <code>update</code>, <code>preUpdate</code> and <code>postUpdate</code> methods will be invoked in sync with the scene events. Running <code>this.lifecycle.remove(player)</code> will stop those methods from being invoked.</p><p>TODO: better example with custom mapping &amp; showing how each method hook is optional.</p><h2>Development</h2><p>The project is controlled by npm scripts and uses cypress &amp; jest for testing. Cypress is used for end-to-end verification that the plugin works as expected with Phaser. Jest is used for unit testing the plugin (via heavy mocking since Phaser headless mode is not complete).</p><ul>
+</code></pre><p>And the player&apos;s <code>update</code>, <code>preUpdate</code> and <code>postUpdate</code> methods will be invoked in sync with the scene events. Running <code>this.lifecycle.remove(player)</code> will stop those methods from being invoked.</p><p>If you don&apos;t pass in a second parameter to <code>LifeCyclePlugin#add(...)</code>, it will check the given object for the following methods: &quot;update&quot;, &quot;preUpdate&quot;, &quot;preupdate&quot;, &quot;postUpdate&quot;, &quot;postupdate&quot;, &quot;render&quot; and &quot;destroy&quot;. If they are found, they are automatically subscribed to the corresponding scene events.</p><p>Alternatively, you can specify a custom mapping from Scene event name to method name:</p><pre><code class="lang-js"><code class="source-code prettyprint">class CustomPlayer {
+  draw() {
+    console.log(&quot;Alias for render&quot;);
+  }
+  kill() {
+    console.log(&quot;Alias for destroy!&quot;);
+  }
+}
+
+const player = new CustomPlayer();
+
+this.lifecycle.add(player, {
+  render: object.draw,
+  destroy: object.kill
+});</code>
+</code></pre><p>TODO: better example with custom mapping &amp; showing how each method hook is optional.</p><h2>Development</h2><p>The project is controlled by npm scripts and uses cypress &amp; jest for testing. Cypress is used for end-to-end verification that the plugin works as expected with Phaser. Jest is used for unit testing the plugin (via heavy mocking since Phaser headless mode is not complete).</p><ul>
 <li>The <code>watch</code> and <code>build</code> tasks will build the plugin source in library/ or the projects in end-to-end-tests/</li>
 <li>The <code>serve</code> task opens the whole project (starting at the root) in a server</li>
 <li>The <code>dev</code> task will build &amp; watch the library, tests and open up the server. This is useful for creating tests and updating the library.</li>
@@ -186,7 +268,7 @@ this.lifecycle.add(player);</code>
 <li>Each test game inside of &quot;end-to-end-tests/&quot; should have an &quot;index.html&quot; file as the entry point. &quot;src/js/index.js&quot; will be compiled to &quot;build/js/index.js&quot; by webpack. (Cypress doesn&apos;t support <code>type=&quot;module&quot;</code> on scripts, so this is necessary if we need modules.)</li>
 <li>Each test has access to <code>test-utils.js</code> which provides <code>startTest</code>, <code>passTest</code> and <code>failTest</code> methods. Call <code>startTest</code> at the beginning and pass/fail when the test passes/fails. This manipulates in the DOM in a way that cypress is expecting.</li>
 <li>Each test in &quot;cypress/integration/&quot; simply loads up the specified URL and waits for it to pass or timeout. (Technically, startTest and failTest are ignored, but they are useful for visual inspection of a test.)</li>
-</ul><p>The jest unit tests rely on a simple mocking of Phaser. They are stored inside &quot;src/&quot;. Once Phaser headless is available, this testing structure could be re-evaluated.</p><h2>Similar Work</h2><p>samme&apos;s nice <a href="https://github.com/samme/phaser-plugin-update">phaser-plugin-update</a> is similar, but just focused on update, whereas our use case requires more of Phaser&apos;s life cycle hooks.</p></div>
+</ul><p>The jest unit tests rely on a simple mocking of Phaser. They are stored inside &quot;src/&quot;. Once Phaser headless is available, this testing structure could be re-evaluated.</p><h2>Similar Work</h2><p>samme&apos;s nice <a href="https://github.com/samme/phaser-plugin-update">phaser-plugin-update</a> is similar, but just focused on update, whereas our use case required more of Phaser&apos;s life cycle hooks.</p></div>
         <a data-ice="link" href="manual/README.html"></a>
       </div>
     </div>

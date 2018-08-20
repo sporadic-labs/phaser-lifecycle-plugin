@@ -133,7 +133,7 @@ unsubscribes the listener.</p>
           
           
           
-          <span class="code" data-ice="name"><span><a href="class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-member-postUpdateListeners">postUpdateListeners</a></span></span><span class="code" data-ice="signature">: <span>*</span></span>
+          <span class="code" data-ice="name"><span><a href="class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-member-eventHandlers">eventHandlers</a></span></span><span class="code" data-ice="signature">: {}</span>
         </p>
       </div>
       <div>
@@ -161,7 +161,63 @@ unsubscribes the listener.</p>
           
           
           
-          <span class="code" data-ice="name"><span><a href="class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-member-preUpdateListeners">preUpdateListeners</a></span></span><span class="code" data-ice="signature">: <span>*</span></span>
+          <span class="code" data-ice="name"><span><a href="class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-member-eventNames">eventNames</a></span></span><span class="code" data-ice="signature">: <span>*</span></span>
+        </p>
+      </div>
+      <div>
+        
+        
+        
+      </div>
+    </td>
+    <td>
+      
+      
+    </td>
+  </tr>
+<tr data-ice="target">
+    <td>
+      <span class="access" data-ice="access">public</span>
+      
+      
+      
+      <span class="override" data-ice="override"></span>
+    </td>
+    <td>
+      <div>
+        <p>
+          
+          
+          
+          <span class="code" data-ice="name"><span><a href="class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-member-listeners">listeners</a></span></span><span class="code" data-ice="signature">: {}</span>
+        </p>
+      </div>
+      <div>
+        
+        
+        
+      </div>
+    </td>
+    <td>
+      
+      
+    </td>
+  </tr>
+<tr data-ice="target">
+    <td>
+      <span class="access" data-ice="access">public</span>
+      
+      
+      
+      <span class="override" data-ice="override"></span>
+    </td>
+    <td>
+      <div>
+        <p>
+          
+          
+          
+          <span class="code" data-ice="name"><span><a href="class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-member-possibleMethodNames">possibleMethodNames</a></span></span><span class="code" data-ice="signature">: <span>*</span></span>
         </p>
       </div>
       <div>
@@ -231,34 +287,6 @@ unsubscribes the listener.</p>
       
     </td>
   </tr>
-<tr data-ice="target">
-    <td>
-      <span class="access" data-ice="access">public</span>
-      
-      
-      
-      <span class="override" data-ice="override"></span>
-    </td>
-    <td>
-      <div>
-        <p>
-          
-          
-          
-          <span class="code" data-ice="name"><span><a href="class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-member-updateListeners">updateListeners</a></span></span><span class="code" data-ice="signature">: <span>*</span></span>
-        </p>
-      </div>
-      <div>
-        
-        
-        
-      </div>
-    </td>
-    <td>
-      
-      
-    </td>
-  </tr>
 </tbody>
 </table>
 </div>
@@ -280,7 +308,7 @@ unsubscribes the listener.</p>
           
           
           
-          <span class="code" data-ice="name"><span><a href="class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-method-add">add</a></span></span><span class="code" data-ice="signature">(obj: <span>*</span>)</span>
+          <span class="code" data-ice="name"><span><a href="class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-method-add">add</a></span></span><span class="code" data-ice="signature">(object: <span>*</span>, eventMapping: <span>*</span>)</span>
         </p>
       </div>
       <div>
@@ -336,7 +364,7 @@ unsubscribes the listener.</p>
           
           
           
-          <span class="code" data-ice="name"><span><a href="class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-method-onDestroy">onDestroy</a></span></span><span class="code" data-ice="signature">()</span>
+          <span class="code" data-ice="name"><span><a href="class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-method-destroy">destroy</a></span></span><span class="code" data-ice="signature">()</span>
         </p>
       </div>
       <div>
@@ -364,7 +392,7 @@ unsubscribes the listener.</p>
           
           
           
-          <span class="code" data-ice="name"><span><a href="class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-method-onPostUpdate">onPostUpdate</a></span></span><span class="code" data-ice="signature">(args: ...<span>*</span>)</span>
+          <span class="code" data-ice="name"><span><a href="class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-method-onSceneEvent">onSceneEvent</a></span></span><span class="code" data-ice="signature">(eventName: <span>*</span>, args: ...<span>*</span>)</span>
         </p>
       </div>
       <div>
@@ -392,7 +420,7 @@ unsubscribes the listener.</p>
           
           
           
-          <span class="code" data-ice="name"><span><a href="class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-method-onPreUpdate">onPreUpdate</a></span></span><span class="code" data-ice="signature">(args: ...<span>*</span>)</span>
+          <span class="code" data-ice="name"><span><a href="class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-method-remove">remove</a></span></span><span class="code" data-ice="signature">(object: <span>*</span>)</span>
         </p>
       </div>
       <div>
@@ -420,7 +448,7 @@ unsubscribes the listener.</p>
           
           
           
-          <span class="code" data-ice="name"><span><a href="class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-method-onShutdown">onShutdown</a></span></span><span class="code" data-ice="signature">()</span>
+          <span class="code" data-ice="name"><span><a href="class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-method-removeAll">removeAll</a></span></span><span class="code" data-ice="signature">()</span>
         </p>
       </div>
       <div>
@@ -448,7 +476,7 @@ unsubscribes the listener.</p>
           
           
           
-          <span class="code" data-ice="name"><span><a href="class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-method-onUpdate">onUpdate</a></span></span><span class="code" data-ice="signature">(args: ...<span>*</span>)</span>
+          <span class="code" data-ice="name"><span><a href="class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-method-shutdown">shutdown</a></span></span><span class="code" data-ice="signature">()</span>
         </p>
       </div>
       <div>
@@ -476,7 +504,7 @@ unsubscribes the listener.</p>
           
           
           
-          <span class="code" data-ice="name"><span><a href="class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-method-remove">remove</a></span></span><span class="code" data-ice="signature">(obj: <span>*</span>)</span>
+          <span class="code" data-ice="name"><span><a href="class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-method-start">start</a></span></span><span class="code" data-ice="signature">()</span>
         </p>
       </div>
       <div>
@@ -547,18 +575,18 @@ unsubscribes the listener.</p>
 <div data-ice="memberDetails"><h2 data-ice="title">Public Members</h2>
 
 <div class="detail" data-ice="detail">
-  <h3 data-ice="anchor" id="instance-member-postUpdateListeners">
+  <h3 data-ice="anchor" id="instance-member-eventHandlers">
     <span class="access" data-ice="access">public</span>
     
     
     
     
     
-    <span class="code" data-ice="name">postUpdateListeners</span><span class="code" data-ice="signature">: <span>*</span></span>
+    <span class="code" data-ice="name">eventHandlers</span><span class="code" data-ice="signature">: {}</span>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/phaser-lifecycle-plugin.js.html#lineNumber25">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/phaser-lifecycle-plugin.js.html#lineNumber34">source</a></span></span>
     </span>
   </h3>
 
@@ -590,18 +618,104 @@ unsubscribes the listener.</p>
   
 </div>
 <div class="detail" data-ice="detail">
-  <h3 data-ice="anchor" id="instance-member-preUpdateListeners">
+  <h3 data-ice="anchor" id="instance-member-eventNames">
     <span class="access" data-ice="access">public</span>
     
     
     
     
     
-    <span class="code" data-ice="name">preUpdateListeners</span><span class="code" data-ice="signature">: <span>*</span></span>
+    <span class="code" data-ice="name">eventNames</span><span class="code" data-ice="signature">: <span>*</span></span>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/phaser-lifecycle-plugin.js.html#lineNumber24">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/phaser-lifecycle-plugin.js.html#lineNumber26">source</a></span></span>
+    </span>
+  </h3>
+
+  
+  
+  
+  
+
+  
+
+  <div data-ice="properties">
+</div>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+</div>
+<div class="detail" data-ice="detail">
+  <h3 data-ice="anchor" id="instance-member-listeners">
+    <span class="access" data-ice="access">public</span>
+    
+    
+    
+    
+    
+    <span class="code" data-ice="name">listeners</span><span class="code" data-ice="signature">: {}</span>
+    <span class="right-info">
+      
+      
+      <span data-ice="source"><span><a href="file/src/phaser-lifecycle-plugin.js.html#lineNumber30">source</a></span></span>
+    </span>
+  </h3>
+
+  
+  
+  
+  
+
+  
+
+  <div data-ice="properties">
+</div>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+</div>
+<div class="detail" data-ice="detail">
+  <h3 data-ice="anchor" id="instance-member-possibleMethodNames">
+    <span class="access" data-ice="access">public</span>
+    
+    
+    
+    
+    
+    <span class="code" data-ice="name">possibleMethodNames</span><span class="code" data-ice="signature">: <span>*</span></span>
+    <span class="right-info">
+      
+      
+      <span data-ice="source"><span><a href="file/src/phaser-lifecycle-plugin.js.html#lineNumber27">source</a></span></span>
     </span>
   </h3>
 
@@ -718,49 +832,6 @@ unsubscribes the listener.</p>
   
   
 </div>
-<div class="detail" data-ice="detail">
-  <h3 data-ice="anchor" id="instance-member-updateListeners">
-    <span class="access" data-ice="access">public</span>
-    
-    
-    
-    
-    
-    <span class="code" data-ice="name">updateListeners</span><span class="code" data-ice="signature">: <span>*</span></span>
-    <span class="right-info">
-      
-      
-      <span data-ice="source"><span><a href="file/src/phaser-lifecycle-plugin.js.html#lineNumber23">source</a></span></span>
-    </span>
-  </h3>
-
-  
-  
-  
-  
-
-  
-
-  <div data-ice="properties">
-</div>
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-  
-</div>
 </div>
 <div data-ice="methodDetails"><h2 data-ice="title">Public Methods</h2>
 
@@ -772,11 +843,11 @@ unsubscribes the listener.</p>
     
     
     
-    <span class="code" data-ice="name">add</span><span class="code" data-ice="signature">(obj: <span>*</span>)</span>
+    <span class="code" data-ice="name">add</span><span class="code" data-ice="signature">(object: <span>*</span>, eventMapping: <span>*</span>)</span>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/phaser-lifecycle-plugin.js.html#lineNumber70">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/phaser-lifecycle-plugin.js.html#lineNumber58">source</a></span></span>
     </span>
   </h3>
 
@@ -796,7 +867,13 @@ unsubscribes the listener.</p>
     <tbody>
     
     <tr data-ice="property" data-depth="0">
-      <td data-ice="name" class="code" data-depth="0">obj</td>
+      <td data-ice="name" class="code" data-depth="0">object</td>
+      <td data-ice="type" class="code"><span>*</span></td>
+      <td data-ice="appendix"></td>
+      <td data-ice="description"></td>
+    </tr>
+<tr data-ice="property" data-depth="0">
+      <td data-ice="name" class="code" data-depth="0">eventMapping</td>
       <td data-ice="type" class="code"><span>*</span></td>
       <td data-ice="appendix"></td>
       <td data-ice="description"></td>
@@ -835,7 +912,7 @@ unsubscribes the listener.</p>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/phaser-lifecycle-plugin.js.html#lineNumber30">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/phaser-lifecycle-plugin.js.html#lineNumber42">source</a></span></span>
     </span>
   </h3>
 
@@ -867,18 +944,18 @@ unsubscribes the listener.</p>
   
 </div>
 <div class="detail" data-ice="detail">
-  <h3 data-ice="anchor" id="instance-method-onDestroy">
+  <h3 data-ice="anchor" id="instance-method-destroy">
     <span class="access" data-ice="access">public</span>
     
     
     
     
     
-    <span class="code" data-ice="name">onDestroy</span><span class="code" data-ice="signature">()</span>
+    <span class="code" data-ice="name">destroy</span><span class="code" data-ice="signature">()</span>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/phaser-lifecycle-plugin.js.html#lineNumber57">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/phaser-lifecycle-plugin.js.html#lineNumber92">source</a></span></span>
     </span>
   </h3>
 
@@ -910,18 +987,18 @@ unsubscribes the listener.</p>
   
 </div>
 <div class="detail" data-ice="detail">
-  <h3 data-ice="anchor" id="instance-method-onPostUpdate">
+  <h3 data-ice="anchor" id="instance-method-onSceneEvent">
     <span class="access" data-ice="access">public</span>
     
     
     
     
     
-    <span class="code" data-ice="name">onPostUpdate</span><span class="code" data-ice="signature">(args: ...<span>*</span>)</span>
+    <span class="code" data-ice="name">onSceneEvent</span><span class="code" data-ice="signature">(eventName: <span>*</span>, args: ...<span>*</span>)</span>
     <span class="right-info">
       
       
-      <span data-ice="source"><span><a href="file/src/phaser-lifecycle-plugin.js.html#lineNumber47">source</a></span></span>
+      <span data-ice="source"><span><a href="file/src/phaser-lifecycle-plugin.js.html#lineNumber54">source</a></span></span>
     </span>
   </h3>
 
@@ -941,167 +1018,12 @@ unsubscribes the listener.</p>
     <tbody>
     
     <tr data-ice="property" data-depth="0">
-      <td data-ice="name" class="code" data-depth="0">args</td>
-      <td data-ice="type" class="code">...<span>*</span></td>
+      <td data-ice="name" class="code" data-depth="0">eventName</td>
+      <td data-ice="type" class="code"><span>*</span></td>
       <td data-ice="appendix"></td>
       <td data-ice="description"></td>
     </tr>
-</tbody>
-  </table>
-</div>
-</div>
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-  
-</div>
-<div class="detail" data-ice="detail">
-  <h3 data-ice="anchor" id="instance-method-onPreUpdate">
-    <span class="access" data-ice="access">public</span>
-    
-    
-    
-    
-    
-    <span class="code" data-ice="name">onPreUpdate</span><span class="code" data-ice="signature">(args: ...<span>*</span>)</span>
-    <span class="right-info">
-      
-      
-      <span data-ice="source"><span><a href="file/src/phaser-lifecycle-plugin.js.html#lineNumber43">source</a></span></span>
-    </span>
-  </h3>
-
-  
-  
-  
-  
-
-  
-
-  <div data-ice="properties"><div data-ice="properties">
-  <h4 data-ice="title">Params:</h4>
-  <table class="params">
-    <thead>
-    <tr><td>Name</td><td>Type</td><td>Attribute</td><td>Description</td></tr>
-    </thead>
-    <tbody>
-    
-    <tr data-ice="property" data-depth="0">
-      <td data-ice="name" class="code" data-depth="0">args</td>
-      <td data-ice="type" class="code">...<span>*</span></td>
-      <td data-ice="appendix"></td>
-      <td data-ice="description"></td>
-    </tr>
-</tbody>
-  </table>
-</div>
-</div>
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-  
-</div>
-<div class="detail" data-ice="detail">
-  <h3 data-ice="anchor" id="instance-method-onShutdown">
-    <span class="access" data-ice="access">public</span>
-    
-    
-    
-    
-    
-    <span class="code" data-ice="name">onShutdown</span><span class="code" data-ice="signature">()</span>
-    <span class="right-info">
-      
-      
-      <span data-ice="source"><span><a href="file/src/phaser-lifecycle-plugin.js.html#lineNumber51">source</a></span></span>
-    </span>
-  </h3>
-
-  
-  
-  
-  
-
-  
-
-  <div data-ice="properties">
-</div>
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-  
-</div>
-<div class="detail" data-ice="detail">
-  <h3 data-ice="anchor" id="instance-method-onUpdate">
-    <span class="access" data-ice="access">public</span>
-    
-    
-    
-    
-    
-    <span class="code" data-ice="name">onUpdate</span><span class="code" data-ice="signature">(args: ...<span>*</span>)</span>
-    <span class="right-info">
-      
-      
-      <span data-ice="source"><span><a href="file/src/phaser-lifecycle-plugin.js.html#lineNumber39">source</a></span></span>
-    </span>
-  </h3>
-
-  
-  
-  
-  
-
-  
-
-  <div data-ice="properties"><div data-ice="properties">
-  <h4 data-ice="title">Params:</h4>
-  <table class="params">
-    <thead>
-    <tr><td>Name</td><td>Type</td><td>Attribute</td><td>Description</td></tr>
-    </thead>
-    <tbody>
-    
-    <tr data-ice="property" data-depth="0">
+<tr data-ice="property" data-depth="0">
       <td data-ice="name" class="code" data-depth="0">args</td>
       <td data-ice="type" class="code">...<span>*</span></td>
       <td data-ice="appendix"></td>
@@ -1137,7 +1059,7 @@ unsubscribes the listener.</p>
     
     
     
-    <span class="code" data-ice="name">remove</span><span class="code" data-ice="signature">(obj: <span>*</span>)</span>
+    <span class="code" data-ice="name">remove</span><span class="code" data-ice="signature">(object: <span>*</span>)</span>
     <span class="right-info">
       
       
@@ -1161,7 +1083,7 @@ unsubscribes the listener.</p>
     <tbody>
     
     <tr data-ice="property" data-depth="0">
-      <td data-ice="name" class="code" data-depth="0">obj</td>
+      <td data-ice="name" class="code" data-depth="0">object</td>
       <td data-ice="type" class="code"><span>*</span></td>
       <td data-ice="appendix"></td>
       <td data-ice="description"></td>
@@ -1169,6 +1091,135 @@ unsubscribes the listener.</p>
 </tbody>
   </table>
 </div>
+</div>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+</div>
+<div class="detail" data-ice="detail">
+  <h3 data-ice="anchor" id="instance-method-removeAll">
+    <span class="access" data-ice="access">public</span>
+    
+    
+    
+    
+    
+    <span class="code" data-ice="name">removeAll</span><span class="code" data-ice="signature">()</span>
+    <span class="right-info">
+      
+      
+      <span data-ice="source"><span><a href="file/src/phaser-lifecycle-plugin.js.html#lineNumber80">source</a></span></span>
+    </span>
+  </h3>
+
+  
+  
+  
+  
+
+  
+
+  <div data-ice="properties">
+</div>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+</div>
+<div class="detail" data-ice="detail">
+  <h3 data-ice="anchor" id="instance-method-shutdown">
+    <span class="access" data-ice="access">public</span>
+    
+    
+    
+    
+    
+    <span class="code" data-ice="name">shutdown</span><span class="code" data-ice="signature">()</span>
+    <span class="right-info">
+      
+      
+      <span data-ice="source"><span><a href="file/src/phaser-lifecycle-plugin.js.html#lineNumber84">source</a></span></span>
+    </span>
+  </h3>
+
+  
+  
+  
+  
+
+  
+
+  <div data-ice="properties">
+</div>
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+</div>
+<div class="detail" data-ice="detail">
+  <h3 data-ice="anchor" id="instance-method-start">
+    <span class="access" data-ice="access">public</span>
+    
+    
+    
+    
+    
+    <span class="code" data-ice="name">start</span><span class="code" data-ice="signature">()</span>
+    <span class="right-info">
+      
+      
+      <span data-ice="source"><span><a href="file/src/phaser-lifecycle-plugin.js.html#lineNumber49">source</a></span></span>
+    </span>
+  </h3>
+
+  
+  
+  
+  
+
+  
+
+  <div data-ice="properties">
 </div>
 
   
