@@ -134,9 +134,9 @@ this.lifecycle.add(player);
 
 And the player's `update`, `preUpdate` and `postUpdate` methods will be invoked in sync with the scene events. Running `this.lifecycle.remove(player)` will stop those methods from being invoked.
 
-If you don't pass in a second parameter to `LifeCyclePlugin#add(...)`, it will check the given object for the following methods: "update", "preUpdate", "preupdate", "postUpdate", "postupdate", "render" and "destroy". If they are found, they are automatically subscribed to the corresponding scene events.
+If you don't pass in a second parameter to `LifeCyclePlugin#add(...)`, it will check the given object for any of the following methods (which correspond to scene events): `update`, `preUpdate`, `postUpdate`, `render`, `shutdown`, `destroy`, `start`, `ready`, `boot`, `sleep`, `wake`, `pause`, `resume`, `resize`, `transitionInit`, `transitionStart`, `transitionOut` and `transitionComplete`. If they are found, they are automatically subscribed to the corresponding scene event. The plugin will look for lowercase names like `postupdate` as well as camelCase like `postUpdate`. If you don't care about the whole suite of scene events, you can use `setEventsToTrack` and pass in an array of the scene events that you care about, e.g. `this.lifecycle.setEventsToTrack(["update", "postUpdate"])`.
 
-Alternatively, you can specify a custom mapping from Scene event name to method name:
+Alternatively, you can specify a custom mapping of Scene event name to method name when adding an object to the plugin:
 
 ```js
 class CustomPlayer {
