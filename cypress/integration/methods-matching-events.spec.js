@@ -1,6 +1,6 @@
 /// <reference types="Cypress" />
 
-const testName = "sample-test";
+const testName = "methods-matching-events";
 
 context(`Run ${testName}`, () => {
   it("should run with no errors", () => {

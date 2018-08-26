@@ -1,7 +1,5 @@
 /**
- * Verify that the matterCollision's addOnCollideStart, addOnCollideActive and addOnCollideEnd fire
- * correctly for GO vs GO collisions. Three objects are created and only collisions between two of
- * them should fire.
+ * Verify that a lifecycle object with methods matching scene events will be subscribed
  */
 
 import Phaser from "phaser";
@@ -14,8 +12,7 @@ const state = {
   postUpdateCalled: false
 };
 function updateTest() {
-  if (state.updateCalled && state.preUpdateCalled && state.postUpdateCalled)
-    passTest();
+  if (state.updateCalled && state.preUpdateCalled && state.postUpdateCalled) passTest();
 }
 
 export default class MainScene extends Phaser.Scene {

@@ -10,12 +10,6 @@ const config = {
   parent: "game-container",
   pixelArt: true,
   scene: MainScene,
-  physics: {
-    default: "matter",
-    matter: {
-      debug: false
-    }
-  },
   plugins: {
     scene: [
       {
