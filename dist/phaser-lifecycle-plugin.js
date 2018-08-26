@@ -151,31 +151,41 @@ var LifecyclePlugin = function (_Phaser$Plugins$Scene) {
     _this.scene = scene;
     _this.systems = scene.sys;
 
-    // Other events we could proxy:
-    //  pause, resume, sleep, wake, resize, boot, start, transition
-    var camelCaseEvents = ["update", "preUpdate", "postUpdate", "render", "destroy"];
-    _this.eventNames = camelCaseEvents.map(function (s) {
-      return s.toLowerCase();
-    });
-    _this.possibleMethodNames = new Set([].concat(camelCaseEvents, _toConsumableArray(_this.eventNames)));
+    _this.hasStarted = false;
 
-    // A hashmap of listeners in the form: eventName => Map(object, method)
-    _this.listeners = {};
-    _this.eventNames.forEach(function (name) {
-      return _this.listeners[name] = new Map();
-    });
-
-    // Create bound versions of each event handler
-    _this.eventHandlers = {};
-    _this.eventNames.forEach(function (name) {
-      return _this.eventHandlers[name] = _this.onSceneEvent.bind(_this, name);
-    });
+    var camelCaseEvents = ["update", "preUpdate", "postUpdate", "render", "shutdown", "destroy", "start", "ready", "boot", "sleep", "wake", "pause", "resume", "resize", "transitionInit", "transitionStart", "transitionOut", "transitionComplete"];
+    _this.setEventsToTrack(camelCaseEvents);
 
     if (!scene.sys.settings.isBooted) _this.systems.events.once("boot", _this.boot, _this);
     return _this;
   }
 
   _createClass(LifecyclePlugin, [{
+    key: "setEventsToTrack",
+    value: function setEventsToTrack(camelCaseEvents) {
+      var _this2 = this;
+
+      // Rather than selectively unsubing & resubing, nuke all and resub later
+      if (this.hasStarted) this.unsubscribeSceneEvents();
+
+      this.eventNames = camelCaseEvents.map(function (s) {
+        return s.toLowerCase();
+      });
+      this.possibleMethodNames = new Set([].concat(_toConsumableArray(camelCaseEvents), _toConsumableArray(this.eventNames)));
+
+      var oldListeners = this.listeners || {};
+      this.listeners = {};
+      this.eventNames.forEach(function (name) {
+        _this2.listeners[name] = oldListeners[name] ? oldListeners[name] : new Map();
+      });
+
+      this.eventHandlers = {};
+      this.eventNames.forEach(function (name) {
+        _this2.eventHandlers[name] = _this2.onSceneEvent.bind(_this2, name);
+      });
+      if (this.hasStarted) this.subscribeSceneEvents();
+    }
+  }, {
     key: "boot",
     value: function boot() {
       var emitter = this.systems.events;
@@ -186,11 +196,27 @@ var LifecyclePlugin = function (_Phaser$Plugins$Scene) {
   }, {
     key: "start",
     value: function start() {
-      var _this2 = this;
+      this.hasStarted = true;
+      this.subscribeSceneEvents();
+    }
+  }, {
+    key: "subscribeSceneEvents",
+    value: function subscribeSceneEvents() {
+      var _this3 = this;
 
       var emitter = this.systems.events;
       this.eventNames.forEach(function (name) {
-        return emitter.on(name, _this2.eventHandlers[name]);
+        return emitter.on(name, _this3.eventHandlers[name]);
+      });
+    }
+  }, {
+    key: "unsubscribeSceneEvents",
+    value: function unsubscribeSceneEvents() {
+      var _this4 = this;
+
+      var emitter = this.systems.events;
+      this.eventNames.forEach(function (name) {
+        return emitter.off(name, _this4.eventHandlers[name]);
       });
     }
   }, {
@@ -207,7 +233,7 @@ var LifecyclePlugin = function (_Phaser$Plugins$Scene) {
   }, {
     key: "add",
     value: function add(object, eventMapping) {
-      var _this3 = this;
+      var _this5 = this;
 
       // No mapping given, default to checking for methods named after the event
       if (!eventMapping) {
@@ -225,50 +251,42 @@ var LifecyclePlugin = function (_Phaser$Plugins$Scene) {
             eventName = _ref2[0],
             method = _ref2[1];
 
-        var listenerMap = _this3.listeners[eventName];
+        var listenerMap = _this5.listeners[eventName];
         if (listenerMap) listenerMap.set(object, method);
       });
     }
   }, {
     key: "remove",
     value: function remove(object) {
-      var _this4 = this;
+      var _this6 = this;
 
       this.eventNames.forEach(function (name) {
-        return _this4.listeners[name].delete(object);
+        return _this6.listeners[name].delete(object);
       });
     }
   }, {
     key: "removeAll",
     value: function removeAll() {
-      var _this5 = this;
+      var _this7 = this;
 
       this.eventNames.forEach(function (name) {
-        return _this5.listeners[name].clear();
+        return _this7.listeners[name].clear();
       });
     }
   }, {
     key: "shutdown",
     value: function shutdown() {
-      var _this6 = this;
-
+      this.hasStarted = false;
       this.removeAll();
-      var emitter = this.systems.events;
-      this.eventNames.forEach(function (eventName) {
-        emitter.off(eventName, _this6.eventHandlers[eventName]);
-      });
+      this.unsubscribeSceneEvents();
     }
   }, {
     key: "destroy",
     value: function destroy() {
-      var _this7 = this;
-
       if (this.eventHandlers["destroy"]) this.eventHandlers["destroy"]();
       var emitter = this.systems.events;
       emitter.off("shutdown", this.onShutdown, this);
-      this.eventNames.forEach(function (eventName) {
-        emitter.off(eventName, _this7.eventHandlers[eventName]);
-      });
+      this.unsubscribeSceneEvents();
       this.removeAll();
     }
   }]);
