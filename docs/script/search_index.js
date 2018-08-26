@@ -342,6 +342,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "src/phaser-lifecycle-plugin.js~lifecycleplugin#hasstarted",
+    "class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-member-hasStarted",
+    "src/phaser-lifecycle-plugin.js~LifecyclePlugin#hasStarted",
+    "member"
+  ],
+  [
     "src/phaser-lifecycle-plugin.js~lifecycleplugin#listeners",
     "class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-member-listeners",
     "src/phaser-lifecycle-plugin.js~LifecyclePlugin#listeners",
@@ -378,6 +384,12 @@ window.esdocSearchIndex = [
     "member"
   ],
   [
+    "src/phaser-lifecycle-plugin.js~lifecycleplugin#seteventstotrack",
+    "class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-method-setEventsToTrack",
+    "src/phaser-lifecycle-plugin.js~LifecyclePlugin#setEventsToTrack",
+    "method"
+  ],
+  [
     "src/phaser-lifecycle-plugin.js~lifecycleplugin#shutdown",
     "class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-method-shutdown",
     "src/phaser-lifecycle-plugin.js~LifecyclePlugin#shutdown",
@@ -390,9 +402,21 @@ window.esdocSearchIndex = [
     "method"
   ],
   [
+    "src/phaser-lifecycle-plugin.js~lifecycleplugin#subscribesceneevents",
+    "class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-method-subscribeSceneEvents",
+    "src/phaser-lifecycle-plugin.js~LifecyclePlugin#subscribeSceneEvents",
+    "method"
+  ],
+  [
     "src/phaser-lifecycle-plugin.js~lifecycleplugin#systems",
     "class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-member-systems",
     "src/phaser-lifecycle-plugin.js~LifecyclePlugin#systems",
     "member"
+  ],
+  [
+    "src/phaser-lifecycle-plugin.js~lifecycleplugin#unsubscribesceneevents",
+    "class/src/phaser-lifecycle-plugin.js~LifecyclePlugin.html#instance-method-unsubscribeSceneEvents",
+    "src/phaser-lifecycle-plugin.js~LifecyclePlugin#unsubscribeSceneEvents",
+    "method"
   ]
 ]
