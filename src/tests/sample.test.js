@@ -99,3 +99,36 @@ describe("scene started with lifecycle plugin", () => {
     expect(object.update.mock.calls.length).toBe(1);
   });
 });
+
+describe("scene started with lifecycle plugin with custom set of scene events to track", () => {
+  let scene;
+  let plugin;
+
+  beforeEach(() => {
+    scene = new Scene();
+    plugin = new Plugin(scene, {});
+    scene.events.emit("boot");
+    scene.sys.settings.isBooted = true;
+    scene.events.emit("start");
+  });
+
+  test("after setting update as the only event to track, only update should be triggered", () => {
+    plugin.setEventsToTrack(["update"]);
+    const object = { update: jest.fn(), preupdate: jest.fn() };
+    plugin.add(object);
+    emitPreUpdate(scene);
+    expect(object.preupdate.mock.calls.length).toBe(0);
+    emitUpdate(scene);
+    expect(object.update.mock.calls.length).toBe(1);
+  });
+
+  test("adding object before setting events to track should only trigger events that are tracked", () => {
+    const object = { update: jest.fn(), preupdate: jest.fn() };
+    plugin.add(object);
+    plugin.setEventsToTrack(["update"]);
+    emitPreUpdate(scene);
+    expect(object.preupdate.mock.calls.length).toBe(0);
+    emitUpdate(scene);
+    expect(object.update.mock.calls.length).toBe(1);
+  });
+});
