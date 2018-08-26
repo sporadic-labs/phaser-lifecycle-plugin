@@ -20,23 +20,51 @@ export default class LifecyclePlugin extends Phaser.Plugins.ScenePlugin {
     this.scene = scene;
     this.systems = scene.sys;
 
-    // Other events we could proxy:
-    //  pause, resume, sleep, wake, resize, boot, start, transition
-    const camelCaseEvents = ["update", "preUpdate", "postUpdate", "render", "destroy"];
+    this.hasStarted = false;
+
+    const camelCaseEvents = [
+      "update",
+      "preUpdate",
+      "postUpdate",
+      "render",
+      "shutdown",
+      "destroy",
+      "start",
+      "ready",
+      "boot",
+      "sleep",
+      "wake",
+      "pause",
+      "resume",
+      "resize",
+      "transitionInit",
+      "transitionStart",
+      "transitionOut",
+      "transitionComplete"
+    ];
+    this.setEventsToTrack(camelCaseEvents);
+
+    if (!scene.sys.settings.isBooted) this.systems.events.once("boot", this.boot, this);
+  }
+
+  setEventsToTrack(camelCaseEvents) {
+    // Rather than selectively unsubing & resubing, nuke all and resub later
+    if (this.hasStarted) this.unsubscribeSceneEvents();
+
     this.eventNames = camelCaseEvents.map(s => s.toLowerCase());
     this.possibleMethodNames = new Set([...camelCaseEvents, ...this.eventNames]);
 
-    // A hashmap of listeners in the form: eventName => Map(object, method)
+    const oldListeners = this.listeners || {};
     this.listeners = {};
-    this.eventNames.forEach(name => (this.listeners[name] = new Map()));
+    this.eventNames.forEach(name => {
+      this.listeners[name] = oldListeners[name] ? oldListeners[name] : new Map();
+    });
 
-    // Create bound versions of each event handler
     this.eventHandlers = {};
-    this.eventNames.forEach(
-      name => (this.eventHandlers[name] = this.onSceneEvent.bind(this, name))
-    );
-
-    if (!scene.sys.settings.isBooted) this.systems.events.once("boot", this.boot, this);
+    this.eventNames.forEach(name => {
+      this.eventHandlers[name] = this.onSceneEvent.bind(this, name);
+    });
+    if (this.hasStarted) this.subscribeSceneEvents();
   }
 
   boot() {
@@ -47,8 +75,18 @@ export default class LifecyclePlugin extends Phaser.Plugins.ScenePlugin {
   }
 
   start() {
+    this.hasStarted = true;
+    this.subscribeSceneEvents();
+  }
+
+  subscribeSceneEvents() {
     const emitter = this.systems.events;
     this.eventNames.forEach(name => emitter.on(name, this.eventHandlers[name]));
+  }
+
+  unsubscribeSceneEvents() {
+    const emitter = this.systems.events;
+    this.eventNames.forEach(name => emitter.off(name, this.eventHandlers[name]));
   }
 
   onSceneEvent(eventName, ...args) {
@@ -82,20 +120,16 @@ export default class LifecyclePlugin extends Phaser.Plugins.ScenePlugin {
   }
 
   shutdown() {
+    this.hasStarted = false;
     this.removeAll();
-    const emitter = this.systems.events;
-    this.eventNames.forEach(eventName => {
-      emitter.off(eventName, this.eventHandlers[eventName]);
-    });
+    this.unsubscribeSceneEvents();
   }
 
   destroy() {
     if (this.eventHandlers["destroy"]) this.eventHandlers["destroy"]();
     const emitter = this.systems.events;
     emitter.off("shutdown", this.onShutdown, this);
-    this.eventNames.forEach(eventName => {
-      emitter.off(eventName, this.eventHandlers[eventName]);
-    });
+    this.unsubscribeSceneEvents();
     this.removeAll();
   }
 }
